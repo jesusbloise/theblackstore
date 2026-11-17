@@ -4,48 +4,27 @@ import {
 } from "@/components/products/ProductCatalog";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { Container } from "@/components/ui/Container";
-import { sdk } from "@/lib/medusa";
+import { listPublishedProductsByParentCategory } from "@/services/catalog";
 
 export const dynamic = "force-dynamic";
 
-type MedusaRegion = {
-  id: string;
-  currency_code: string;
-};
-
-type MedusaVariantOption = {
-  value?: string | null;
-};
-
-type MedusaCalculatedPrice = {
-  calculated_amount?: number | null;
-};
-
-type MedusaVariant = {
-  options?: MedusaVariantOption[] | null;
-  calculated_price?: MedusaCalculatedPrice | null;
-};
-
-type MedusaProduct = {
-  id: string;
-  title: string;
-  handle?: string | null;
-  created_at?: string | null;
-  variants?: MedusaVariant[] | null;
-};
-
-function normalizeHandle(value?: string | null) {
-  if (!value) {
-    return "";
+function mapProductType(
+  type: "STANDARD" | "CUSTOM_MATTRESS",
+  category: string,
+): CatalogProduct["type"] {
+  if (type === "CUSTOM_MATTRESS") {
+    return "a-medida";
   }
 
-  return value
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/^\/+/, "")
-    .replace(/\/+$/, "")
-    .toLowerCase();
+  if (
+    category
+      .toLowerCase()
+      .includes("resortes")
+  ) {
+    return "resortes";
+  }
+
+  return "espuma";
 }
 
 export default async function ColchonesPage() {
@@ -53,78 +32,37 @@ export default async function ColchonesPage() {
   let connectionError = false;
 
   try {
-    const regionResponse =
-      await sdk.store.region.list();
-
-    const regions =
-      regionResponse.regions as MedusaRegion[];
-
-    const chileRegion = regions.find(
-      (region) =>
-        region.currency_code.toLowerCase() ===
-        "clp",
-    );
-
-    if (!chileRegion) {
-      throw new Error(
-        "No se encontró la región Chile en Medusa",
+    const databaseProducts =
+      await listPublishedProductsByParentCategory(
+        "colchones",
       );
-    }
 
-    const response =
-      await sdk.store.product.list({
-        limit: 20,
-        region_id: chileRegion.id,
-        fields:
-          "*variants.calculated_price,*variants.options",
-      });
-
-    const medusaProducts =
-      response.products as MedusaProduct[];
-
-    products = medusaProducts.map(
-      (product, index) => {
-        const firstVariant =
-          product.variants?.[0];
-
-        const price =
-          firstVariant?.calculated_price
-            ?.calculated_amount ?? 0;
-
-        const sizes =
-          firstVariant?.options
-            ?.map((option) => option.value)
-            .filter(
-              (value): value is string =>
-                typeof value === "string" &&
-                value.length > 0,
-            ) ?? [];
-
-        const handle =
-          normalizeHandle(product.handle) ||
-          product.id;
-
-        return {
-          id: product.id,
-          name: product.title,
-          category: "Colchones",
-          price,
-          href: `/producto/${handle}`,
-          type: "espuma",
-          sizes,
-          relevance: 100 - index,
-          sales: 0,
-          createdAt:
-            product.created_at ??
-            new Date().toISOString(),
-        };
-      },
+    products = databaseProducts.map(
+      (product, index) => ({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        price: product.price,
+        originalPrice:
+          product.compareAtPrice,
+        image: product.image,
+        href: `/producto/${product.slug}`,
+        type: mapProductType(
+          product.type,
+          product.category,
+        ),
+        sizes: product.sizes,
+        relevance: 100 - index,
+        sales: 0,
+        createdAt:
+          product.createdAt.toISOString(),
+      }),
     );
   } catch (error) {
     connectionError = true;
 
     console.error(
-      "ERROR REAL AL CONECTAR CON MEDUSA:",
+      "ERROR AL CONSULTAR EL CATÁLOGO PROPIO:",
       error,
     );
   }
@@ -164,14 +102,14 @@ export default async function ColchonesPage() {
         <Container>
           {connectionError ? (
             <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700">
-              No fue posible conectar con Medusa.
-              Revisa la terminal del frontend para
-              ver el error exacto.
+              No fue posible consultar el catálogo.
+              Revisa la terminal para ver el error
+              exacto.
             </div>
           ) : products.length === 0 ? (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-slate-600">
-              La conexión con Medusa funcionó, pero
-              no se encontraron productos publicados.
+              La conexión con la base funcionó, pero
+              todavía no hay productos publicados.
             </div>
           ) : (
             <ProductCatalog

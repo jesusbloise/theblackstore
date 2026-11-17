@@ -1,0 +1,301 @@
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+import { z } from "zod";
+
+import { prisma } from "@/lib/prisma";
+
+const optionalDimensionSchema = z
+  .number()
+  .int()
+  .positive()
+  .nullable()
+  .optional();
+
+const createVariantSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(
+      2,
+      "El nombre de la variante es obligatorio.",
+    ),
+
+  sku: z
+    .string()
+    .trim()
+    .min(2, "El SKU es obligatorio."),
+
+  price: z
+    .number()
+    .int()
+    .min(
+      0,
+      "El precio no puede ser negativo.",
+    ),
+
+  compareAtPrice: z
+    .number()
+    .int()
+    .positive()
+    .nullable()
+    .optional(),
+
+  stock: z
+    .number()
+    .int()
+    .min(
+      0,
+      "El stock no puede ser negativo.",
+    ),
+
+  measure: z
+    .string()
+    .trim()
+    .optional(),
+
+  density: z
+    .string()
+    .trim()
+    .optional(),
+
+  height: z
+    .string()
+    .trim()
+    .optional(),
+
+  lengthCm: optionalDimensionSchema,
+  widthCm: optionalDimensionSchema,
+  heightCm: optionalDimensionSchema,
+
+  manageInventory: z
+    .boolean()
+    .default(true),
+
+  allowBackorder: z
+    .boolean()
+    .default(false),
+
+  isActive: z
+    .boolean()
+    .default(true),
+});
+
+type RouteContext = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+export async function POST(
+  request: NextRequest,
+  { params }: RouteContext,
+) {
+  try {
+    const { id: productId } =
+      await params;
+
+    const body = await request.json();
+
+    const validation =
+      createVariantSchema.safeParse(
+        body,
+      );
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            validation.error.issues[0]
+              ?.message ??
+            "Los datos de la variante no son válidos.",
+          errors:
+            validation.error.flatten(),
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const data = validation.data;
+
+    const product =
+      await prisma.product.findUnique({
+        where: {
+          id: productId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+    if (!product) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "El producto no existe.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    const existingSku =
+      await prisma.productVariant.findUnique({
+        where: {
+          sku: data.sku,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+    if (existingSku) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Ya existe una variante con ese SKU.",
+        },
+        {
+          status: 409,
+        },
+      );
+    }
+
+    const lastVariant =
+      await prisma.productVariant.findFirst({
+        where: {
+          productId,
+        },
+        orderBy: {
+          sortOrder: "desc",
+        },
+        select: {
+          sortOrder: true,
+        },
+      });
+
+    const variant =
+      await prisma.$transaction(
+        async (transaction) => {
+          const createdVariant =
+            await transaction.productVariant.create({
+              data: {
+                productId,
+                name: data.name,
+                sku: data.sku
+                  .trim()
+                  .toUpperCase(),
+
+                price: data.price,
+
+                compareAtPrice:
+                  data.compareAtPrice ??
+                  null,
+
+                stock: data.stock,
+
+                lengthCm:
+                  data.lengthCm ?? null,
+
+                widthCm:
+                  data.widthCm ?? null,
+
+                heightCm:
+                  data.heightCm ?? null,
+
+                manageInventory:
+                  data.manageInventory,
+
+                allowBackorder:
+                  data.allowBackorder,
+
+                isActive:
+                  data.isActive,
+
+                sortOrder:
+                  (lastVariant?.sortOrder ??
+                    0) + 1,
+              },
+            });
+
+          const attributes: {
+            variantId: string;
+            name: string;
+            value: string;
+            sortOrder: number;
+          }[] = [];
+
+          if (data.measure) {
+            attributes.push({
+              variantId:
+                createdVariant.id,
+              name: "Medida",
+              value: data.measure,
+              sortOrder: 1,
+            });
+          }
+
+          if (data.density) {
+            attributes.push({
+              variantId:
+                createdVariant.id,
+              name: "Densidad",
+              value: data.density,
+              sortOrder: 2,
+            });
+          }
+
+          if (data.height) {
+            attributes.push({
+              variantId:
+                createdVariant.id,
+              name: "Altura",
+              value: data.height,
+              sortOrder: 3,
+            });
+          }
+
+          if (attributes.length > 0) {
+            await transaction.variantAttribute.createMany({
+              data: attributes,
+            });
+          }
+
+          return createdVariant;
+        },
+      );
+
+    return NextResponse.json(
+      {
+        ok: true,
+        variant,
+      },
+      {
+        status: 201,
+      },
+    );
+  } catch (error) {
+    console.error(
+      "Error creando variante:",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "No fue posible crear la variante.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}

@@ -18,29 +18,39 @@ import {
   calculateMattressPrice,
   formatPrice,
   recognizeMattressSize,
-  thicknessOptions,
 } from "@/components/products/custom-mattress/config";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
-import {
-  createCustomMattressLineItem,
-  getOrCreateMedusaCart,
-} from "@/services/cart";
+
 
 type CustomMattressConfiguratorProps = {
   productId: string;
   productName: string;
   productImage?: string;
-  variantId?: string;
+
+  density?: string;
+  minimumLengthCm?: number;
+  maximumLengthCm?: number;
+  minimumWidthCm?: number;
+  maximumWidthCm?: number;
+  allowedThicknessCm?: number[];
+  basePricePerSquareM?: number;
 };
 
 export function CustomMattressConfigurator({
   productId,
   productName,
   productImage,
-  variantId,
+  density = "D21",
+  minimumLengthCm = 50,
+  maximumLengthCm = 250,
+  minimumWidthCm = 50,
+  maximumWidthCm = 250,
+  allowedThicknessCm = [10, 15, 20],
+  basePricePerSquareM = 72000,
 }: CustomMattressConfiguratorProps) {
+
   const { addItem } = useCart();
 
   const [length, setLength] =
@@ -58,8 +68,8 @@ export function CustomMattressConfigurator({
   const [added, setAdded] =
     useState(false);
 
-    const [isAdding, setIsAdding] =
-  useState(false);
+  const [isAdding, setIsAdding] =
+    useState(false);
 
   const [error, setError] =
     useState("");
@@ -86,19 +96,37 @@ export function CustomMattressConfigurator({
     numericWidth >= 50 &&
     !recognizedSize;
 
-  const unitPrice = useMemo(
-    () =>
-      calculateMattressPrice({
-        length: numericLength,
-        width: numericWidth,
-        thickness,
-      }),
-    [
-      numericLength,
-      numericWidth,
-      thickness,
-    ],
-  );
+  const unitPrice = useMemo(() => {
+    if (
+      !numericLength ||
+      !numericWidth ||
+      numericLength <= 0 ||
+      numericWidth <= 0
+    ) {
+      return 0;
+    }
+
+    const areaFactor =
+      (numericLength * numericWidth) / 10000;
+
+    const thicknessFactor =
+      thickness / 10;
+
+    const calculatedPrice =
+      basePricePerSquareM *
+      areaFactor *
+      thicknessFactor;
+
+    return (
+      Math.round(calculatedPrice / 1000) *
+      1000
+    );
+  }, [
+    numericLength,
+    numericWidth,
+    thickness,
+    basePricePerSquareM,
+  ]);
 
   const totalPrice =
     unitPrice * quantity;
@@ -115,122 +143,100 @@ export function CustomMattressConfigurator({
     );
   }
 
- async function handleAddToCart() {
-  if (isAdding) {
-    return;
-  }
-
-  if (
-    !Number.isFinite(numericLength) ||
-    !Number.isFinite(numericWidth) ||
-    numericLength < 50 ||
-    numericWidth < 50 ||
-    numericLength > 250 ||
-    numericWidth > 250
-  ) {
-    setError(
-      "Ingresa medidas válidas entre 50 y 250 cm.",
-    );
-
-    return;
-  }
-
-  if (
-    !Number.isFinite(unitPrice) ||
-    unitPrice <= 0
-  ) {
-    setError(
-      "No fue posible calcular el precio. Revisa las medidas ingresadas.",
-    );
-
-    return;
-  }
-
-  if (!variantId) {
-    setError(
-      "Este producto no tiene una variante válida en Medusa.",
-    );
-
-    return;
-  }
-
-  setError("");
-  setAdded(false);
-  setIsAdding(true);
-
-  const configurationLabel =
-    `${numericLength} × ${numericWidth} × ${thickness} cm`;
-
-  try {
-    const medusaCart =
-      await getOrCreateMedusaCart();
-
-    await createCustomMattressLineItem({
-      cartId: medusaCart.id,
-      variantId,
-      quantity,
-      length: numericLength,
-      width: numericWidth,
-      thickness,
-    });
-
-    /*
-     * Conservamos por ahora el carrito local,
-     * porque la interfaz de carrito y checkout
-     * todavía depende de CartProvider.
-     */
-    addItem({
-      id: productId,
-      variantId,
-      name: productName,
-      image: productImage,
-      href: "/producto/colchon-a-medida",
-      price: unitPrice,
-      quantity,
-      subtitle: configurationLabel,
-      dimensioned: true,
-      configuration: {
-        length: numericLength,
-        width: numericWidth,
-        thickness,
-        label: configurationLabel,
-      },
-      metadata: {
-        length: numericLength,
-        width: numericWidth,
-        thickness,
-        density: "D21",
-        custom_product: true,
-      },
-    });
-
-    setAdded(true);
-
-    if (addedTimeoutRef.current) {
-      window.clearTimeout(
-        addedTimeoutRef.current,
-      );
+  async function handleAddToCart() {
+    if (isAdding) {
+      return;
     }
 
-    addedTimeoutRef.current =
-      window.setTimeout(() => {
-        setAdded(false);
-      }, 2500);
-  } catch (error) {
-    console.error(
-      "No se pudo agregar el colchón al carrito de Medusa:",
-      error,
-    );
+    if (
+      !Number.isFinite(numericLength) ||
+      !Number.isFinite(numericWidth) ||
+      numericLength < minimumLengthCm ||
+      numericLength > maximumLengthCm ||
+      numericWidth < minimumWidthCm ||
+      numericWidth > maximumWidthCm
+    ) {
+      setError(
+        `Ingresa un largo entre ${minimumLengthCm} y ${maximumLengthCm} cm, y un ancho entre ${minimumWidthCm} y ${maximumWidthCm} cm.`,
+      );
 
-    setError(
-      error instanceof Error
-        ? error.message
-        : "No fue posible agregar el colchón al carrito. Intenta nuevamente.",
-    );
-  } finally {
-    setIsAdding(false);
+      return;
+    }
+
+    if (
+      !Number.isFinite(unitPrice) ||
+      unitPrice <= 0
+    ) {
+      setError(
+        "No fue posible calcular el precio. Revisa las medidas ingresadas.",
+      );
+
+      return;
+    }
+
+
+
+    setError("");
+    setAdded(false);
+    setIsAdding(true);
+
+    const configurationLabel =
+      `${numericLength} × ${numericWidth} × ${thickness} cm`;
+
+    try {
+      addItem({
+        id: productId,
+        name: productName,
+        image: productImage,
+        href: "/producto/colchon-a-medida",
+        price: unitPrice,
+        quantity,
+        subtitle: configurationLabel,
+        dimensioned: true,
+
+        configuration: {
+          length: numericLength,
+          width: numericWidth,
+          thickness,
+          label: configurationLabel,
+        },
+
+        metadata: {
+          length: numericLength,
+          width: numericWidth,
+          thickness,
+          density,
+          custom_product: true,
+        },
+      });
+
+      setAdded(true);
+
+      if (addedTimeoutRef.current) {
+        window.clearTimeout(
+          addedTimeoutRef.current,
+        );
+      }
+
+      addedTimeoutRef.current =
+        window.setTimeout(() => {
+          setAdded(false);
+        }, 2500);
+    } catch (error) {
+      console.error(
+        "No se pudo agregar el colchón al carrito:",
+        error,
+      );
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No fue posible agregar el colchón al carrito.",
+      );
+    } finally {
+      setIsAdding(false);
+    }
   }
-}
 
   return (
     <div className="mt-7">
@@ -304,11 +310,15 @@ export function CustomMattressConfigurator({
           </p>
 
           <div className="grid grid-cols-3 gap-3">
-            {thicknessOptions.map(
-              (option) => {
+            {allowedThicknessCm.map(
+              (thicknessValue) => {
+                const option = {
+                  value: thicknessValue,
+                  label: `${thicknessValue} cm`,
+                };
+
                 const isSelected =
-                  thickness ===
-                  option.value;
+                  thickness === option.value;
 
                 return (
                   <button
@@ -451,29 +461,29 @@ export function CustomMattressConfigurator({
       </div>
 
       <div className="mt-5">
-       <Button
-  type="button"
-  size="lg"
-  fullWidth
-  disabled={isAdding}
-  onClick={handleAddToCart}
->
+        <Button
+          type="button"
+          size="lg"
+          fullWidth
+          disabled={isAdding}
+          onClick={handleAddToCart}
+        >
           {isAdding ? (
-  <>
-    <ShoppingCart size={20} />
-    Agregando...
-  </>
-) : added ? (
-  <>
-    <Check size={20} />
-    Producto agregado
-  </>
-) : (
-  <>
-    <ShoppingCart size={20} />
-    Agregar al carrito
-  </>
-)}
+            <>
+              <ShoppingCart size={20} />
+              Agregando...
+            </>
+          ) : added ? (
+            <>
+              <Check size={20} />
+              Producto agregado
+            </>
+          ) : (
+            <>
+              <ShoppingCart size={20} />
+              Agregar al carrito
+            </>
+          )}
         </Button>
       </div>
 
