@@ -1,7 +1,9 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
+import { requireAdminApi } from "@/lib/auth/require-admin-api";
 
 const categorySchema = z.object({
   name: z.string().min(2),
@@ -13,24 +15,27 @@ const categorySchema = z.object({
 export async function POST(
   request: NextRequest,
 ) {
+  // Verificar la sesión administrativa.
+  const unauthorized = await requireAdminApi();
+
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   try {
     const body = await request.json();
 
-    const data =
-      categorySchema.parse(body);
+    const data = categorySchema.parse(body);
 
-    const category =
-      await prisma.category.create({
-        data: {
-          name: data.name,
-          slug: data.slug,
-          description:
-            data.description,
-          parentId:
-            data.parentId ?? null,
-          isActive: true,
-        },
-      });
+    const category = await prisma.category.create({
+      data: {
+        name: data.name,
+        slug: data.slug,
+        description: data.description,
+        parentId: data.parentId ?? null,
+        isActive: true,
+      },
+    });
 
     return NextResponse.json({
       ok: true,
@@ -42,8 +47,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "No fue posible crear la categoría.",
+        message: "No fue posible crear la categoría.",
       },
       {
         status: 400,

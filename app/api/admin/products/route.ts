@@ -5,6 +5,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { requireAdminApi } from "@/lib/auth/require-admin-api";
 
 const createProductSchema = z.object({
   name: z
@@ -47,8 +48,16 @@ const createProductSchema = z.object({
 export async function POST(
   request: NextRequest,
 ) {
+  const unauthorized = await requireAdminApi();
+
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   try {
     const body = await request.json();
+
+    // Aquí continúa tu código existente.
 
     const validation =
       createProductSchema.safeParse(body);
