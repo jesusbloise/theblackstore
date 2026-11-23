@@ -54,6 +54,8 @@ const updateVariantSchema = z.object({
       "El stock no puede ser negativo.",
     ),
 
+  attributes: z.array(z.object({ name: z.string().trim().min(1).max(40), value: z.string().trim().min(1).max(80) })).max(6).optional(),
+
   measure: z
     .string()
     .trim()
@@ -75,15 +77,15 @@ const updateVariantSchema = z.object({
 
   manageInventory: z
     .boolean()
-    .default(true),
+    .optional(),
 
   allowBackorder: z
     .boolean()
-    .default(false),
+    .optional(),
 
   isActive: z
     .boolean()
-    .default(true),
+    .optional(),
 });
 
 type RouteContext = {
@@ -224,23 +226,19 @@ export async function PATCH(
                   data.price,
 
                 compareAtPrice:
-                  data.compareAtPrice ??
-                  null,
+                  data.compareAtPrice,
 
                 stock:
                   data.stock,
 
                 lengthCm:
-                  data.lengthCm ??
-                  null,
+                  data.lengthCm,
 
                 widthCm:
-                  data.widthCm ??
-                  null,
+                  data.widthCm,
 
                 heightCm:
-                  data.heightCm ??
-                  null,
+                  data.heightCm,
 
                 manageInventory:
                   data.manageInventory,
@@ -298,6 +296,16 @@ export async function PATCH(
                 data.height.trim(),
               sortOrder: 3,
             });
+          }
+
+          if (data.attributes !== undefined) {
+            attributes.length = 0;
+            data.attributes.forEach((attribute, index) => attributes.push({
+              variantId,
+              name: attribute.name,
+              value: attribute.value,
+              sortOrder: index + 1,
+            }));
           }
 
           if (

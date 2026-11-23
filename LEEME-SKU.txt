@@ -1,0 +1,8 @@
+The Black Store — SKU automático para productos únicos
+
+1. Descomprime este ZIP desde la raíz del proyecto con Expand-Archive -Force.
+2. Ejecuta npx tsc --noEmit.
+3. En /admin/productos/nuevo verifica que la variante «Única» tenga un SKU TBS-... generado automáticamente.
+4. Puedes modificarlo manualmente antes de guardar.
+
+Nota: el servidor debe mantener la restricción de unicidad de SKU. Esta mejora cubre la creación de productos; no cambia SKU existentes.

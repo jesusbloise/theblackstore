@@ -51,6 +51,8 @@ const createVariantSchema = z.object({
       "El stock no puede ser negativo.",
     ),
 
+  attributes: z.array(z.object({ name: z.string().trim().min(1).max(40), value: z.string().trim().min(1).max(80) })).max(6).optional(),
+
   measure: z
     .string()
     .trim()
@@ -267,6 +269,16 @@ export async function POST(
               value: data.height,
               sortOrder: 3,
             });
+          }
+
+          if (data.attributes !== undefined) {
+            attributes.length = 0;
+            data.attributes.forEach((attribute, index) => attributes.push({
+              variantId: createdVariant.id,
+              name: attribute.name,
+              value: attribute.value,
+              sortOrder: index + 1,
+            }));
           }
 
           if (attributes.length > 0) {

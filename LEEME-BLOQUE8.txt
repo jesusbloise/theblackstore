@@ -1,0 +1,14 @@
+BLOQUE 8 - Variantes e inventario (primera implementación)
+
+1. Haz commit de respaldo antes de instalar.
+2. Descomprime este ZIP en la raíz del proyecto con Expand-Archive -Force.
+3. Ejecuta npx tsc --noEmit.
+4. Prueba en un producto BORRADOR, primero creación y luego edición.
+
+Incluye:
+- Generador de combinaciones por talla, color u otras opciones, hasta 100 combinaciones.
+- Cada variante tiene SKU, precio y stock independientes.
+- Guardado de atributos genéricos en VariantAttribute, compatible con Medida/Densidad/Altura previos.
+- Edición de precio, stock, SKU y estado en tabla sin navegar a otra página.
+
+Límites pendientes: el guardado de variantes existentes se realiza por llamadas API sucesivas (no atómico); no incluye borrado masivo ni imágenes por variante; tampoco reserva ni descuento de stock durante checkout. No pruebes compras reales todavía.

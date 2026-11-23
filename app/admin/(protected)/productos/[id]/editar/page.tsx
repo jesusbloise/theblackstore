@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { DeleteVariantButton } from "@/components/admin/DeleteVariantButton";
+import { InventoryVariantsEditor } from "@/components/admin/InventoryVariantsEditor";
 import {
   ImageGallery,
   ImageUploader,
@@ -20,14 +20,6 @@ type EditProductPageProps = {
     id: string;
   }>;
 };
-
-function formatPrice(value: number) {
-  return new Intl.NumberFormat("es-CL", {
-    style: "currency",
-    currency: "CLP",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 export default async function EditProductPage({
   params,
@@ -113,168 +105,19 @@ export default async function EditProductPage({
             />
           </section>
 
-          {/* VARIANTES */}
-
+          {/* VARIANTES E INVENTARIO */}
           <section className="rounded-2xl border border-slate-200 bg-white p-7">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-black text-slate-900">
-                  Variantes
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Medidas, SKU, precios, dimensiones y stock del producto.
-                </p>
-              </div>
-
-              <Link
-                href={`/admin/productos/${product.id}/variantes/nueva`}
-                className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
-              >
-                + Nueva variante
-              </Link>
-            </div>
-
-            {product.variants.length === 0 ? (
-              <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                <p className="font-bold text-slate-700">
-                  Este producto todavía no tiene variantes.
-                </p>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Agrega una variante para definir SKU, precio, medidas y stock.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full min-w-[850px]">
-                  <thead className="border-b border-slate-200 bg-slate-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-sm font-extrabold text-slate-800">
-                        Variante
-                      </th>
-
-                      <th className="px-4 py-3 text-left text-sm font-extrabold text-slate-800">
-                        SKU
-                      </th>
-
-                      <th className="px-4 py-3 text-left text-sm font-extrabold text-slate-800">
-                        Precio
-                      </th>
-
-                      <th className="px-4 py-3 text-left text-sm font-extrabold text-slate-800">
-                        Stock
-                      </th>
-
-                      <th className="px-4 py-3 text-left text-sm font-extrabold text-slate-800">
-                        Estado
-                      </th>
-
-                      <th className="px-4 py-3 text-right text-sm font-extrabold text-slate-800">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {product.variants.map(
-                      (variant) => (
-                        <tr
-                          key={variant.id}
-                          className="border-b border-slate-200 last:border-b-0"
-                        >
-                          <td className="px-4 py-4">
-                            <p className="font-bold text-slate-900">
-                              {variant.name}
-                            </p>
-
-                            {variant.attributes.length > 0 && (
-                              <p className="mt-1 text-xs leading-5 text-slate-500">
-                                {variant.attributes
-                                  .map(
-                                    (attribute) =>
-                                      `${attribute.name}: ${attribute.value}`,
-                                  )
-                                  .join(" · ")}
-                              </p>
-                            )}
-
-                            {(variant.lengthCm ||
-                              variant.widthCm ||
-                              variant.heightCm) && (
-                              <p className="mt-1 text-xs text-slate-500">
-                                Dimensiones:{" "}
-                                {variant.lengthCm ??
-                                  "—"}{" "}
-                                ×{" "}
-                                {variant.widthCm ??
-                                  "—"}{" "}
-                                ×{" "}
-                                {variant.heightCm ??
-                                  "—"}{" "}
-                                cm
-                              </p>
-                            )}
-                          </td>
-
-                          <td className="px-4 py-4 font-mono text-sm text-slate-700">
-                            {variant.sku}
-                          </td>
-
-                          <td className="px-4 py-4 font-bold text-slate-900">
-                            {formatPrice(
-                              variant.price,
-                            )}
-                          </td>
-
-                          <td className="px-4 py-4 font-bold text-slate-900">
-                            {variant.stock}
-                          </td>
-
-                          <td className="px-4 py-4">
-                            <span
-                              className={[
-                                "inline-flex rounded-full px-3 py-1 text-xs font-extrabold",
-                                variant.isActive
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-slate-200 text-slate-600",
-                              ].join(" ")}
-                            >
-                              {variant.isActive
-                                ? "Activa"
-                                : "Inactiva"}
-                            </span>
-                          </td>
-
-                          <td className="px-4 py-4">
-                            <div className="flex items-center justify-end gap-4">
-                              <Link
-                                href={`/admin/productos/${product.id}/variantes/${variant.id}/editar`}
-                                className="text-sm font-bold text-slate-700 transition hover:text-slate-950"
-                              >
-                                Editar
-                              </Link>
-
-                              <DeleteVariantButton
-                                productId={
-                                  product.id
-                                }
-                                variantId={
-                                  variant.id
-                                }
-                                variantName={
-                                  variant.name
-                                }
-                              />
-                            </div>
-                          </td>
-                        </tr>
-                      ),
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <h2 className="mb-2 text-xl font-black text-slate-900">Variantes e inventario</h2>
+            <p className="mb-5 text-sm text-slate-500">Edita tallas, colores, SKU, precio y existencias sin salir de esta página.</p>
+            <InventoryVariantsEditor
+              productId={product.id}
+              prefix={product.slug.slice(0, 12)}
+              initialVariants={product.variants.map(v => ({
+                id: v.id, name: v.name, sku: v.sku, price: v.price,
+                stock: v.stock, isActive: v.isActive,
+                attributes: v.attributes.map(a => ({name:a.name,value:a.value})),
+              }))}
+            />
           </section>
 
           {/* IMÁGENES */}

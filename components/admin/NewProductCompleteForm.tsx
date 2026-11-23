@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { VariantOptionsBuilder, type StoreVariantDraft } from "@/components/admin/VariantOptionsBuilder";
 
 type Category = { id: string; name: string; parentName?: string };
-type Variant = { name: string; sku: string; price: string; stock: string; isActive: boolean };
-const emptyVariant = (): Variant => ({ name: "Única", sku: "", price: "", stock: "0", isActive: true });
+type Variant = StoreVariantDraft;
+const emptyVariant = (): Variant => ({ name: "Única", sku: "", price: "", stock: "0", isActive: true, attributes: [] });
 const slugify = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 const MAX_IMAGES = 5;
+const generateSku = () => `TBS-${crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase()}`;
 
 export function NewProductCompleteForm({ categories }: { categories: Category[] }) {
   const router = useRouter();
@@ -18,6 +20,11 @@ export function NewProductCompleteForm({ categories }: { categories: Category[] 
   const [brand, setBrand] = useState("");
   const [description, setDescription] = useState("");
   const [variants, setVariants] = useState<Variant[]>([emptyVariant()]);
+  // Generate once in the browser to avoid server/client hydration mismatches.
+  // Never overwrite a SKU the merchant entered manually.
+  useEffect(() => {
+    setVariants(current => current.map(v => v.sku.trim() ? v : { ...v, sku: generateSku() }));
+  }, []);
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
   const [saving, setSaving] = useState(false);
@@ -54,7 +61,7 @@ export function NewProductCompleteForm({ categories }: { categories: Category[] 
       for (let i = 0; i < variants.length; i++) {
         setStage(`Guardando variante ${i + 1} de ${variants.length}...`);
         const v = variants[i];
-        await api(`/api/admin/products/${productId}/variants`, "POST", { name: v.name.trim(), sku: v.sku.trim(), price: Number(v.price), stock: Number(v.stock), isActive: v.isActive, manageInventory: true, allowBackorder: false });
+        await api(`/api/admin/products/${productId}/variants`, "POST", { name: v.name.trim(), sku: v.sku.trim(), price: Number(v.price), stock: Number(v.stock), isActive: v.isActive, manageInventory: true, allowBackorder: false, attributes: v.attributes });
       }
       for (let i = 0; i < files.length; i++) {
         setStage(`Subiendo imagen ${i + 1} de ${files.length}...`);
@@ -82,8 +89,8 @@ export function NewProductCompleteForm({ categories }: { categories: Category[] 
       <label className="block text-sm font-semibold">Marca<input className={`${inputClass} mt-2`} value={brand} onChange={e => setBrand(e.target.value)} /></label>
       <label className="block text-sm font-semibold">Descripción<textarea className={`${inputClass} mt-2 min-h-28`} value={description} onChange={e => setDescription(e.target.value)} /></label>
     </section>
-    <section className="space-y-4 border-t pt-6"><div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Variantes y precios</h2><p className="text-sm text-slate-500">Para un producto sin tallas, deja la variante «Única».</p></div><button type="button" onClick={() => setVariants(v => [...v, { ...emptyVariant(), name: "" }])} className="rounded-xl border px-4 py-2 text-sm font-semibold">+ Agregar variante</button></div>
-      {variants.map((v, i) => <div key={i} className="space-y-3 rounded-xl border border-slate-200 p-4"><div className="flex justify-between"><strong>Variante {i + 1}</strong>{variants.length > 1 && <button type="button" className="text-sm text-red-600" onClick={() => setVariants(prev => prev.filter((_, j) => i !== j))}>Eliminar</button>}</div><div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">Nombre / talla / color<input required minLength={2} className={`${inputClass} mt-1`} value={v.name} onChange={e => updateVariant(i, { name: e.target.value })} placeholder="Ej. Negra / M" /></label><label className="text-sm">SKU *<input required minLength={2} className={`${inputClass} mt-1`} value={v.sku} onChange={e => updateVariant(i, { sku: e.target.value })} placeholder="CAM-NEG-M" /></label><label className="text-sm">Precio CLP *<input required min={0} step={1} type="number" className={`${inputClass} mt-1`} value={v.price} onChange={e => updateVariant(i, { price: e.target.value })} /></label><label className="text-sm">Stock *<input required min={0} step={1} type="number" className={`${inputClass} mt-1`} value={v.stock} onChange={e => updateVariant(i, { stock: e.target.value })} /></label></div><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.isActive} onChange={e => updateVariant(i, { isActive: e.target.checked })} /> Variante activa</label></div>)}
+    <section className="space-y-4 border-t pt-6"><VariantOptionsBuilder variants={variants} onChange={setVariants} defaultSkuPrefix={slug.slice(0,12) || "PROD"}/><div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Variantes y precios</h2><p className="text-sm text-slate-500">Para un producto sin tallas, deja la variante «Única».</p></div><button type="button" onClick={() => setVariants(v => [...v, { ...emptyVariant(), name: "", sku: generateSku() }])} className="rounded-xl border px-4 py-2 text-sm font-semibold">+ Agregar variante</button></div>
+      {variants.map((v, i) => <div key={i} className="space-y-3 rounded-xl border border-slate-200 p-4"><div className="flex justify-between"><strong>Variante {i + 1}{v.attributes.length ? ` · ${v.attributes.map(a=>`${a.name}: ${a.value}`).join(" · ")}` : ""}</strong>{variants.length > 1 && <button type="button" className="text-sm text-red-600" onClick={() => setVariants(prev => prev.filter((_, j) => i !== j))}>Eliminar</button>}</div><div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">Nombre / talla / color<input required minLength={2} className={`${inputClass} mt-1`} value={v.name} onChange={e => updateVariant(i, { name: e.target.value })} placeholder="Ej. Negra / M" /></label><label className="text-sm">SKU (automático, editable) *<input required minLength={2} className={`${inputClass} mt-1`} value={v.sku} onChange={e => updateVariant(i, { sku: e.target.value })} placeholder="Se genera automáticamente" /><span className="mt-1 block text-xs text-slate-500">Puedes reemplazarlo por el código del proveedor.</span></label><label className="text-sm">Precio CLP *<input required min={0} step={1} type="number" className={`${inputClass} mt-1`} value={v.price} onChange={e => updateVariant(i, { price: e.target.value })} /></label><label className="text-sm">Stock *<input required min={0} step={1} type="number" className={`${inputClass} mt-1`} value={v.stock} onChange={e => updateVariant(i, { stock: e.target.value })} /></label></div><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.isActive} onChange={e => updateVariant(i, { isActive: e.target.checked })} /> Variante activa</label></div>)}
     </section>
     <section className="space-y-3 border-t pt-6"><h2 className="text-xl font-bold">Fotografías</h2><p className="text-sm text-slate-500">Selecciona hasta 5 imágenes JPG, PNG o WebP de máximo 5 MB cada una. Se subirán automáticamente al guardar el producto, sin otro botón.</p><input className={inputClass} type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={e => { const chosen = Array.from(e.target.files || []); if (chosen.length > MAX_IMAGES || chosen.some(f => !["image/jpeg", "image/png", "image/webp"].includes(f.type) || f.size > 5 * 1024 * 1024)) { setError("Máximo 5 fotografías JPG, PNG o WebP de hasta 5 MB."); e.target.value = ""; return; } setError(""); setFiles(chosen); }} /><div className="grid grid-cols-2 gap-3 sm:grid-cols-5">{previews.map((p, i) => <div key={`${p.file.name}-${i}`} className="relative"><img src={p.url} alt={p.file.name} className="aspect-square w-full rounded-lg object-cover" /><button type="button" className="absolute right-1 top-1 rounded-full bg-white px-2 text-sm" onClick={() => setFiles(v => v.filter((_, j) => j !== i))} aria-label="Quitar fotografía">×</button></div>)}</div></section>
     <section className="space-y-4 border-t pt-6"><h2 className="text-xl font-bold">Estado</h2><select className={inputClass} value={status} onChange={e => setStatus(e.target.value as "DRAFT" | "PUBLISHED")}><option value="DRAFT">Guardar como borrador</option><option value="PUBLISHED">Publicar producto</option></select>{status === "PUBLISHED" && !sellable && <p className="text-sm text-amber-700">Necesitas al menos una variante activa con SKU y precio mayor que $0.</p>}</section>
