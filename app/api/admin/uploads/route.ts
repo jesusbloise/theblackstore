@@ -1,3 +1,4 @@
+import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import {
   NextRequest,
   NextResponse,
@@ -48,6 +49,12 @@ function getExtension(
 export async function POST(
   request: NextRequest,
 ) {
+  const unauthorized = await requireAdminApi();
+
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   try {
     const formData =
       await request.formData();

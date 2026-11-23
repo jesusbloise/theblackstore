@@ -1,3 +1,4 @@
+import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import {
   NextRequest,
   NextResponse,
@@ -26,6 +27,12 @@ export async function POST(
   request: NextRequest,
   { params }: RouteContext,
 ) {
+  const unauthorized = await requireAdminApi();
+
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   try {
     const { id: productId } =
       await params;
