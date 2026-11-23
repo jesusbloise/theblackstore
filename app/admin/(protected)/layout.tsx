@@ -1,6 +1,7 @@
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import LogoutButton from "./LogoutButton";
 
 import { getAdminSession } from "@/lib/auth/admin-session";
 
@@ -70,16 +71,17 @@ export default async function ProtectedAdminLayout({
               Configuración
             </Link>
           </nav>
+<div className="mt-10 border-t border-slate-700 pt-5">
+  <p className="text-sm font-semibold">
+    {admin.name}
+  </p>
 
-          <div className="mt-10 border-t border-slate-700 pt-5">
-            <p className="text-sm font-semibold">
-              {admin.name}
-            </p>
+  <p className="mt-1 text-xs text-slate-400">
+    {admin.role}
+  </p>
 
-            <p className="mt-1 text-xs text-slate-400">
-              {admin.role}
-            </p>
-          </div>
+  <LogoutButton />
+</div>
         </aside>
 
         <main className="min-w-0 flex-1 p-10">
