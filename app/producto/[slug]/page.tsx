@@ -1,3 +1,4 @@
+import { getMediaUrl } from "@/lib/media-url";
 import {
   Check,
   PackageCheck,
@@ -130,17 +131,17 @@ export default async function ProductPage({
 
   const categoryName =
     product.category?.name ??
-    "Colchones";
+    "Productos";
 
   const categoryHref =
     product.category
-      ? `/colchones/${product.category.slug}`
-      : "/colchones";
+      ? `/categoria/${product.category.slug}`
+      : "/productos";
 
   const description =
     product.description ??
     product.shortDescription ??
-    "Producto de descanso fabricado por Incal.";
+    "Conoce los detalles de este producto.";
 
   const manufacturingText =
     product.manufacturingDays
@@ -159,7 +160,7 @@ export default async function ProductPage({
               },
               {
                 label: "Colchones",
-                href: "/colchones",
+                href: "/productos",
               },
               {
                 label: categoryName,
@@ -207,12 +208,12 @@ export default async function ProductPage({
 
               <p className="mt-5 text-base leading-7 text-slate-600 sm:text-lg">
                 {description}
-              </p>git diff --cached --check
+              </p>
               <ProductPurchasePanel
                 productId={product.id}
                 productName={product.name}
                 productHref={`/producto/${product.slug}`}
-                productImage={product.images[0]}
+                productImage={getMediaUrl(product.images[0]) ?? undefined}
                 variants={product.variants}
                 dimensioned
               />

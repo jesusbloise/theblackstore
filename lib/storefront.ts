@@ -4,7 +4,7 @@ export async function getNavigationCategories() {
   return prisma.category.findMany({
     where: { isActive: true, parentId: null },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, slug: true, children: {
+    select: { id: true, name: true, slug: true, imageUrl: true, children: {
       where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, slug: true },
     } },

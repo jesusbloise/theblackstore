@@ -80,6 +80,14 @@ export async function POST(
 
     const data = validation.data;
 
+    // Un producto nuevo aún no tiene variantes. Primero debe guardarse como borrador.
+    if (data.status === ProductStatus.PUBLISHED) {
+      return NextResponse.json({
+        ok: false,
+        message: "Guarda primero el producto como borrador, crea una variante activa con precio y luego publícalo.",
+      }, { status: 400 });
+    }
+
     const existingProduct =
       await prisma.product.findUnique({
         where: {
@@ -137,7 +145,7 @@ export async function POST(
                 slug: data.slug,
                 description:
                   data.description || null,
-                brand: data.brand || "Incal",
+                brand: data.brand || null,
                 status: data.status,
                 type: ProductType.STANDARD,
               },

@@ -67,7 +67,7 @@ export function ProductForm({
     );
 
   const [brand, setBrand] = useState(
-    initialData?.brand ?? "Incal",
+    initialData?.brand ?? "",
   );
 
   const [categoryId, setCategoryId] =
@@ -180,7 +180,7 @@ export function ProductForm({
           id="product-name"
           value={name}
           required
-          placeholder="Ej: Cama europea 2 plazas"
+          placeholder="Ej: Camisa de lino negra"
           onChange={(event) => {
             setName(
               event.target.value,
@@ -203,7 +203,7 @@ export function ProductForm({
           id="product-slug"
           value={slug}
           required
-          placeholder="cama-europea-2-plazas"
+          placeholder="camisa-de-lino-negra"
           onChange={(event) => {
             setSlug(
               createSlug(

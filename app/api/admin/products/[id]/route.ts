@@ -170,6 +170,19 @@ export async function PATCH(
       );
     }
 
+    if (data.status === ProductStatus.PUBLISHED) {
+      const sellableVariant = await prisma.productVariant.findFirst({
+        where: { productId, isActive: true, price: { gt: 0 } },
+        select: { id: true },
+      });
+      if (!sellableVariant) {
+        return NextResponse.json({
+          ok: false,
+          message: "No se puede publicar: crea al menos una variante activa con precio mayor que $0.",
+        }, { status: 400 });
+      }
+    }
+
     const updatedProduct =
       await prisma.$transaction(
         async (transaction) => {
@@ -184,7 +197,7 @@ export async function PATCH(
                 description:
                   data.description || null,
                 brand:
-                  data.brand || "Incal",
+                  data.brand || null,
                 status: data.status,
               },
             });

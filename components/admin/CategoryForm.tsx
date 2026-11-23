@@ -14,7 +14,7 @@ type ParentCategoryOption = {
 
 type CategoryFormProps = {
   parentCategories: ParentCategoryOption[];
-  initialCategory?: { id: string; name: string; slug: string; description: string | null; parentId: string | null; isActive: boolean };
+  initialCategory?: { id: string; name: string; slug: string; description: string | null; parentId: string | null; isActive: boolean; imageUrl?: string | null };
 };
 
 function createSlug(value: string) {
@@ -53,6 +53,8 @@ export function CategoryForm({
 
   const [parentId, setParentId] =
     useState(initialCategory?.parentId ?? "");
+
+  const [imageUrl, setImageUrl] = useState(initialCategory?.imageUrl ?? "");
 
   const [isActive, setIsActive] = useState(initialCategory?.isActive ?? true);
 
@@ -101,6 +103,7 @@ export function CategoryForm({
               undefined,
             parentId:
               parentId || null,
+            imageUrl: imageUrl.trim() || null,
             ...(initialCategory ? { isActive } : {}),
           }),
         },
@@ -186,6 +189,13 @@ export function CategoryForm({
           Se genera automáticamente y se usa en
           la dirección web.
         </p>
+      </div>
+
+      <div>
+        <label htmlFor="category-image" className="mb-2 block text-sm font-semibold text-slate-800">Imagen de portada (opcional)</label>
+        <input id="category-image" type="url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="https://..." className="w-full rounded-xl border border-slate-300 bg-white p-3 outline-none focus:border-slate-900" />
+        <p className="mt-2 text-xs text-slate-500">Pega la URL HTTPS de una imagen propia o autorizada. Si queda vacía, se usará una imagen de un producto publicado; si no hay productos, se mostrará un fondo neutro.</p>
+        {imageUrl && <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-slate-100"><img src={imageUrl} alt="Vista previa de la categoría" className="h-44 w-full object-cover" /></div>}
       </div>
 
       <div>

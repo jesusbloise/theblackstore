@@ -1,0 +1,17 @@
+BLOQUE 6 - Publicación segura de productos
+
+Archivos incluidos:
+- app/api/admin/products/route.ts
+- app/api/admin/products/[id]/route.ts
+- components/admin/ProductForm.tsx
+
+Comportamiento:
+- Crear productos nuevos únicamente como borrador.
+- Impedir publicar si no hay una variante activa con precio > 0.
+- Mostrar una advertencia en el formulario.
+- Eliminar el valor predeterminado de marca INCAL en estos formularios y rutas.
+- Stock cero no impide publicar: puede mostrarse como agotado. Las imágenes siguen siendo una recomendación.
+
+Limitación importante: las rutas de variantes deben revisarse para evitar que se elimine/desactive la última variante vendible de un producto ya publicado. No se incluyen en este bloque.
+
+Instalación: descomprimir en la raíz del repositorio y ejecutar npx tsc --noEmit. Probar también en el navegador.

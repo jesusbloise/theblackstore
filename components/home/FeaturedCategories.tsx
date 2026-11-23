@@ -1,7 +1,52 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { getMediaUrl } from "@/lib/media-url";
 import { Container } from "@/components/ui/Container";
 import type { StoreNavigationCategory } from "@/components/layout/Header";
-export function FeaturedCategories({categories}:{categories:StoreNavigationCategory[]}){
- if(categories.length===0)return null;
- return <section className="py-16 sm:py-24"><Container><p className="text-xs font-semibold uppercase tracking-[.24em] text-[#927451]">Descubre</p><div className="mt-3 flex items-end justify-between gap-4"><h2 className="text-3xl font-medium tracking-tight sm:text-4xl">Compra por categoría</h2><Link href="/productos" className="text-sm underline underline-offset-4">Ver productos</Link></div><div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{categories.slice(0,8).map((c,i)=><Link href={`/categoria/${c.slug}`} key={c.id} className="group flex min-h-48 flex-col justify-between border border-[#ded6c9] bg-white p-6 transition hover:border-[#C3AA84] hover:shadow-lg"><span className="text-xs tracking-widest text-[#927451]">{String(i+1).padStart(2,'0')}</span><div><h3 className="text-2xl font-medium">{c.name}</h3><p className="mt-3 text-sm text-[#777]">Explorar colección →</p></div></Link>)}</div></Container></section>;
+
+type CategoryWithImage = StoreNavigationCategory & { imageUrl?: string | null };
+
+export async function FeaturedCategories({ categories }: { categories: CategoryWithImage[] }) {
+  if (!categories.length) return null;
+  const cards = await Promise.all(categories.slice(0, 8).map(async (category) => {
+    if (category.imageUrl) return { ...category, cover: category.imageUrl };
+    const product = await prisma.product.findFirst({
+      where: {
+        status: "PUBLISHED",
+        categories: { some: { category: { OR: [{ id: category.id }, { parentId: category.id }] } } },
+        images: { some: {} },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { images: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 1, select: { url: true } } },
+    });
+    return { ...category, cover: product?.images[0]?.url ?? null };
+  }));
+  return (
+    <section className="py-16 sm:py-24">
+      <Container>
+        <p className="text-xs font-semibold uppercase tracking-[.24em] text-[#927451]">Descubre</p>
+        <div className="mt-3 flex items-end justify-between gap-4">
+          <h2 className="text-3xl font-medium tracking-tight sm:text-4xl">Compra por categoría</h2>
+          <Link href="/productos" className="text-sm underline underline-offset-4">Ver productos</Link>
+        </div>
+        <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {cards.map((category) => (
+            <Link href={`/categoria/${category.slug}`} key={category.id} className="group relative isolate flex aspect-[4/5] min-h-64 overflow-hidden bg-[#e8e3dc]">
+              {category.cover ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={getMediaUrl(category.cover) ?? undefined} alt={`Colección ${category.name}`} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-[#dcd4c8] via-[#eee9e2] to-[#c5b9a9]" aria-hidden="true" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" aria-hidden="true" />
+              <div className="relative mt-auto w-full p-6 text-white">
+                <h3 className="text-2xl font-medium">{category.name}</h3>
+                <p className="mt-2 text-sm text-white/85">Explorar colección <span aria-hidden="true">→</span></p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
 }

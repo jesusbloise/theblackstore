@@ -9,6 +9,7 @@ const categorySchema = z.object({
   name: z.string().min(2),
   slug: z.string().min(2),
   description: z.string().optional(),
+  imageUrl: z.string().url().refine((url) => url.startsWith("https://"), "La imagen debe usar HTTPS").nullable().optional(),
   parentId: z.string().nullable().optional(),
 });
 
@@ -32,6 +33,7 @@ export async function POST(
         name: data.name,
         slug: data.slug,
         description: data.description,
+        imageUrl: data.imageUrl ?? null,
         parentId: data.parentId ?? null,
         isActive: true,
       },

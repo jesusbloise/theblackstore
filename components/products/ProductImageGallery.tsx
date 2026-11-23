@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getMediaUrl } from "@/lib/media-url";
 
 type ProductImageGalleryProps = {
   images: string[];
@@ -34,7 +35,7 @@ export function ProductImageGallery({
     <div>
       <div className="relative aspect-square overflow-hidden rounded-3xl border border-slate-200 bg-white">
         <img
-          src={selectedImage}
+          src={getMediaUrl(selectedImage) ?? undefined}
           alt={productName}
           className="h-full w-full object-contain p-4"
         />
@@ -62,7 +63,7 @@ export function ProductImageGallery({
                 ].join(" ")}
               >
                 <img
-                  src={image}
+                  src={getMediaUrl(image) ?? undefined}
                   alt={`${productName}, imagen ${index + 1}`}
                   className="h-full w-full object-contain p-2"
                 />

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [category, categories] = await Promise.all([
-    prisma.category.findUnique({ where: { id }, select: { id: true, name: true, slug: true, description: true, parentId: true, isActive: true } }),
+    prisma.category.findUnique({ where: { id }, select: { id: true, name: true, slug: true, description: true, imageUrl: true, parentId: true, isActive: true } }),
     prisma.category.findMany({ where: { parentId: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
   ]);
   if (!category) notFound();

@@ -63,6 +63,7 @@ const categoryUpdateSchema = z.object({
   name: z.string().trim().min(2),
   slug: z.string().trim().min(2).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   description: z.string().nullable().optional(),
+  imageUrl: z.string().url().refine((url) => url.startsWith("https://"), "La imagen debe usar HTTPS").nullable().optional(),
   parentId: z.string().nullable(),
   isActive: z.boolean(),
 });
@@ -90,7 +91,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (slugTaken) return NextResponse.json({ ok: false, message: "Ya existe una categoría con ese slug." }, { status: 409 });
     const category = await prisma.category.update({ where: { id }, data: {
       name: data.name, slug: data.slug, description: data.description ?? null,
-      parentId: data.parentId, isActive: data.isActive,
+      parentId: data.parentId, isActive: data.isActive, imageUrl: data.imageUrl ?? null,
     } });
     return NextResponse.json({ ok: true, category });
   } catch (error) {
