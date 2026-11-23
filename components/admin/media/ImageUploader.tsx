@@ -128,6 +128,7 @@ export function ImageUploader({
     }
 
     setFiles(allowedFiles);
+    if (allowedFiles.length > 0) void handleUpload(allowedFiles);
   }
 
   function handleInputChange(
@@ -193,8 +194,8 @@ export function ImageUploader({
     }
   }
 
-  async function handleUpload() {
-    if (files.length === 0) {
+  async function handleUpload(selectedFiles: File[] = files) {
+    if (selectedFiles.length === 0) {
       setError(
         "Selecciona al menos una imagen.",
       );
@@ -206,14 +207,14 @@ export function ImageUploader({
     setSuccess("");
 
     try {
-      for (const file of files) {
+      for (const file of selectedFiles) {
         await uploadSingleFile(
           file,
         );
       }
 
       const uploadedCount =
-        files.length;
+        selectedFiles.length;
 
       clearSelection();
 
@@ -373,52 +374,7 @@ export function ImageUploader({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          disabled={
-            files.length === 0 ||
-            loading
-          }
-          onClick={
-            handleUpload
-          }
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? (
-            <>
-              <Loader2
-                size={18}
-                className="animate-spin"
-              />
-              Subiendo...
-            </>
-          ) : (
-            <>
-              <Upload
-                size={18}
-              />
-              Subir{" "}
-              {files.length > 1
-                ? `${files.length} imágenes`
-                : "imagen"}
-            </>
-          )}
-        </button>
-
-        {files.length > 0 && (
-          <button
-            type="button"
-            disabled={loading}
-            onClick={
-              clearSelection
-            }
-            className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-          >
-            Quitar selección
-          </button>
-        )}
-      </div>
+      {loading && <p role="status" className="flex items-center gap-2 text-sm text-slate-600"><Loader2 size={16} className="animate-spin" /> Subiendo imágenes automáticamente...</p>}
     </div>
   );
 }

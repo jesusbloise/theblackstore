@@ -102,7 +102,7 @@ export default async function EditProductPage({
 
                 brand:
                   product.brand ??
-                  "Incal",
+                  "",
 
                 categoryId:
                   category?.id ?? "",

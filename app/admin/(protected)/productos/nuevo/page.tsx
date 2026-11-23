@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/admin/PageHeader";
-import { ProductForm } from "@/components/admin/ProductForm";
+import { NewProductCompleteForm } from "@/components/admin/NewProductCompleteForm";
 import { getCategories } from "@/services/admin/categories";
 
 export const dynamic = "force-dynamic";
@@ -25,13 +25,11 @@ export default async function NewProductPage() {
     <div>
       <PageHeader
         title="Nuevo producto"
-        description="Crea la información general del producto. Luego agregaremos precios, variantes, inventario e imágenes."
+        description="Completa información, variantes, precios e imágenes en una sola pantalla."
       />
 
       <div className="max-w-4xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <ProductForm
-          categories={categoryOptions}
-        />
+        <NewProductCompleteForm categories={categoryOptions} />
       </div>
     </div>
   );
