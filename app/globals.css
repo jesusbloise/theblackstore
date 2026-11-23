@@ -1,36 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --incal-primary-50: #f3f6fa;
-  --incal-primary-100: #e3eaf3;
-  --incal-primary-200: #c3d1e3;
-  --incal-primary-300: #9aafcb;
-  --incal-primary-400: #718baf;
-  --incal-primary-500: #526e94;
-  --incal-primary-600: #3e5679;
-  --incal-primary-700: #30445f;
-  --incal-primary-800: #25364d;
-  --incal-primary-900: #17283d;
-  --incal-primary-950: #0c1828;
+  --incal-primary-50: #f7f6f3;
+  --incal-primary-100: #ece8e1;
+  --incal-primary-200: #ded6c9;
+  --incal-primary-300: #c8b8a2;
+  --incal-primary-400: #b09a7c;
+  --incal-primary-500: #8b755b;
+  --incal-primary-600: #695640;
+  --incal-primary-700: #4d4033;
+  --incal-primary-800: #292521;
+  --incal-primary-900: #1b1b1b;
+  --incal-primary-950: #101010;
 
-  --incal-secondary-50: #fffbea;
-  --incal-secondary-100: #fff4c2;
-  --incal-secondary-200: #ffe98a;
-  --incal-secondary-300: #ffda4f;
-  --incal-secondary-400: #fbc626;
-  --incal-secondary-500: #e9ac0b;
-  --incal-secondary-600: #c78306;
-  --incal-secondary-700: #9f5d09;
+  --incal-secondary-50: #fcfaf6;
+  --incal-secondary-100: #f5eee2;
+  --incal-secondary-200: #e9dac4;
+  --incal-secondary-300: #d7c09f;
+  --incal-secondary-400: #c3aa84;
+  --incal-secondary-500: #ae936e;
+  --incal-secondary-600: #927451;
+  --incal-secondary-700: #73583d;
 
   --incal-success: #16a34a;
   --incal-warning: #d97706;
   --incal-error: #dc2626;
 
   --incal-background: #ffffff;
-  --incal-surface: #f8fafc;
-  --incal-border: #e2e8f0;
-  --incal-text: #0f172a;
-  --incal-text-muted: #64748b;
+  --incal-surface: #f7f6f3;
+  --incal-border: #e8e5df;
+  --incal-text: #101010;
+  --incal-text-muted: #777777;
 
   --incal-shadow-sm: 0 2px 8px rgb(15 23 42 / 0.07);
   --incal-shadow-md: 0 8px 24px rgb(15 23 42 / 0.09);

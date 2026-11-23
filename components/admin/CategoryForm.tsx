@@ -14,6 +14,7 @@ type ParentCategoryOption = {
 
 type CategoryFormProps = {
   parentCategories: ParentCategoryOption[];
+  initialCategory?: { id: string; name: string; slug: string; description: string | null; parentId: string | null; isActive: boolean };
 };
 
 function createSlug(value: string) {
@@ -28,6 +29,7 @@ function createSlug(value: string) {
 
 export function CategoryForm({
   parentCategories,
+  initialCategory,
 }: CategoryFormProps) {
   const router = useRouter();
 
@@ -38,19 +40,21 @@ export function CategoryForm({
     useState("");
 
   const [name, setName] =
-    useState("");
+    useState(initialCategory?.name ?? "");
 
   const [slug, setSlug] =
-    useState("");
+    useState(initialCategory?.slug ?? "");
 
   const [slugEdited, setSlugEdited] =
-    useState(false);
+    useState(Boolean(initialCategory));
 
   const [description, setDescription] =
-    useState("");
+    useState(initialCategory?.description ?? "");
 
   const [parentId, setParentId] =
-    useState("");
+    useState(initialCategory?.parentId ?? "");
+
+  const [isActive, setIsActive] = useState(initialCategory?.isActive ?? true);
 
   useEffect(() => {
     if (!slugEdited) {
@@ -82,9 +86,9 @@ export function CategoryForm({
 
     try {
       const response = await fetch(
-        "/api/admin/categories",
+        initialCategory ? `/api/admin/categories/${encodeURIComponent(initialCategory.id)}` : "/api/admin/categories",
         {
-          method: "POST",
+          method: initialCategory ? "PATCH" : "POST",
           headers: {
             "Content-Type":
               "application/json",
@@ -97,6 +101,7 @@ export function CategoryForm({
               undefined,
             parentId:
               parentId || null,
+            ...(initialCategory ? { isActive } : {}),
           }),
         },
       );
@@ -145,7 +150,7 @@ export function CategoryForm({
           id="category-name"
           value={name}
           required
-          placeholder="Ej: Camas europeas"
+          placeholder="Ej: Mochilas"
           onChange={(event) => {
             setName(event.target.value);
             setError("");
@@ -253,6 +258,13 @@ export function CategoryForm({
         </div>
       )}
 
+      {initialCategory && (
+        <label className="flex items-center gap-3 text-sm font-semibold text-slate-800">
+          <input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} />
+          Categoría activa
+        </label>
+      )}
+
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
@@ -261,7 +273,7 @@ export function CategoryForm({
         >
           {loading
             ? "Guardando..."
-            : "Guardar categoría"}
+            : initialCategory ? "Guardar cambios" : "Guardar categoría"}
         </button>
 
         <Link

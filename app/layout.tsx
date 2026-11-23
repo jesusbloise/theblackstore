@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 
 import { CartProvider } from "@/components/cart/CartProvider";
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
+import { StoreChrome } from "@/components/layout/StoreChrome";
+import { getNavigationCategories } from "@/lib/storefront";
 
 import "./globals.css";
 
@@ -15,31 +15,29 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: "Incal",
-    template: "%s | Incal",
+    default: "The Black Store",
+    template: "%s | The Black Store",
   },
   description:
-    "Colchones, camas, camarotes, espumas dimensionadas y soluciones para el descanso.",
+    "Una selección de productos para tu estilo. Compra online con despacho por Chilexpress o retiro coordinado en Santiago.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const categories = await getNavigationCategories();
+
   return (
     <html
       lang="es"
       className={manrope.variable}
       data-scroll-behavior="smooth"
     >
-      <body className="min-h-screen bg-white text-slate-950 antialiased">
+      <body className="min-h-screen bg-[#F7F6F3] text-[#101010] antialiased">
         <CartProvider>
-          <Header />
-
-          {children}
-
-          <Footer />
+          <StoreChrome categories={categories}>{children}</StoreChrome>
         </CartProvider>
       </body>
     </html>
