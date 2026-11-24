@@ -1,7 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --incal-primary-50: #f7f6f3;
+  --tbs-ink: #101010;
+  --tbs-charcoal: #242424;
+  --tbs-ivory: #f7f6f3;
+  --tbs-champagne: #c3aa84;
+  --tbs-paper: #ffffff;
+  --tbs-line: #e8e5df;
+  --tbs-muted: #666666;
+  --tbs-radius: 4px;
+  --tbs-section-space: clamp(2.5rem, 5vw, 5rem);
+
+  --incal-primary-50: var(--tbs-ivory);
   --incal-primary-100: #ece8e1;
   --incal-primary-200: #ded6c9;
   --incal-primary-300: #c8b8a2;
@@ -11,13 +21,13 @@
   --incal-primary-700: #4d4033;
   --incal-primary-800: #292521;
   --incal-primary-900: #1b1b1b;
-  --incal-primary-950: #101010;
+  --incal-primary-950: var(--tbs-ink);
 
   --incal-secondary-50: #fcfaf6;
   --incal-secondary-100: #f5eee2;
   --incal-secondary-200: #e9dac4;
   --incal-secondary-300: #d7c09f;
-  --incal-secondary-400: #c3aa84;
+  --incal-secondary-400: var(--tbs-champagne);
   --incal-secondary-500: #ae936e;
   --incal-secondary-600: #927451;
   --incal-secondary-700: #73583d;
@@ -28,7 +38,7 @@
 
   --incal-background: #ffffff;
   --incal-surface: #f7f6f3;
-  --incal-border: #e8e5df;
+  --incal-border: var(--tbs-line);
   --incal-text: #101010;
   --incal-text-muted: #777777;
 
@@ -112,3 +122,13 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Storefront only: keep admin and browser autofill behavior independent. */
+.tbs-storefront { color-scheme: light; }
+.tbs-storefront input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--tbs-paper) inset;
+  -webkit-text-fill-color: var(--tbs-ink);
+  caret-color: var(--tbs-ink);
+}
+.tbs-storefront input[type="checkbox"],
+.tbs-storefront input[type="radio"] { accent-color: var(--tbs-ink); }

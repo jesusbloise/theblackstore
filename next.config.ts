@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
     root: path.resolve(process.cwd()),
   },
   images: {
+    localPatterns: [
+      {
+        pathname: "/api/media",
+      },
+      {
+        pathname: "/**",
+        search: "",
+      },
+    ],
     remotePatterns: [
       {
         protocol: "http",

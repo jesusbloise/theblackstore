@@ -1,77 +1,13 @@
 "use client";
-
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Expand, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getMediaUrl } from "@/lib/media-url";
-
-type ProductImageGalleryProps = {
-  images: string[];
-  productName: string;
-};
-
-export function ProductImageGallery({
-  images,
-  productName,
-}: ProductImageGalleryProps) {
-  const [selectedImage, setSelectedImage] =
-    useState(images[0] ?? "");
-
-  if (images.length === 0) {
-    return (
-      <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
-        <div className="px-8 text-center">
-          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-slate-400">
-            Imagen del producto
-          </p>
-
-          <p className="mt-3 text-2xl font-extrabold text-slate-500">
-            {productName}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="relative aspect-square overflow-hidden rounded-3xl border border-slate-200 bg-white">
-        <img
-          src={getMediaUrl(selectedImage) ?? undefined}
-          alt={productName}
-          className="h-full w-full object-contain p-4"
-        />
-      </div>
-
-      {images.length > 1 && (
-        <div className="mt-4 grid grid-cols-4 gap-3">
-          {images.map((image, index) => {
-            const isSelected =
-              image === selectedImage;
-
-            return (
-              <button
-                key={`${image}-${index}`}
-                type="button"
-                onClick={() =>
-                  setSelectedImage(image)
-                }
-                aria-label={`Ver imagen ${index + 1} de ${productName}`}
-                className={[
-                  "aspect-square overflow-hidden rounded-2xl border bg-white transition",
-                  isSelected
-                    ? "border-brand-950 ring-2 ring-brand-950/10"
-                    : "border-slate-200 hover:border-brand-400",
-                ].join(" ")}
-              >
-                <img
-                  src={getMediaUrl(image) ?? undefined}
-                  alt={`${productName}, imagen ${index + 1}`}
-                  className="h-full w-full object-contain p-2"
-                />
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+export function ProductImageGallery({images,productName}:{images:string[];productName:string}) {
+ const [index,setIndex]=useState(0); const dialog=useRef<HTMLDialogElement>(null);
+ const selected=images[index] ?? images[0];
+ function move(delta:number){setIndex(i=>(i+delta+images.length)%images.length);}
+ if(!selected)return <div className="flex aspect-square items-center justify-center bg-[#F7F6F3] text-sm text-neutral-500">Fotografía próximamente</div>;
+ return <div className="min-w-0"><button type="button" onClick={()=>dialog.current?.showModal()} aria-label="Ampliar fotografía" className="group relative block aspect-square w-full overflow-hidden bg-[#F7F6F3]"><img src={getMediaUrl(selected)??undefined} alt={productName} className="h-full w-full object-contain p-4 transition-transform duration-300 motion-safe:group-hover:scale-105"/><span className="absolute bottom-4 right-4 bg-white p-3"><Expand size={20}/></span></button>
+ {images.length>1&&<div className="mt-3 flex gap-3 overflow-x-auto pb-2">{images.map((src,i)=><button type="button" key={i} aria-label={`Fotografía ${i+1}`} aria-pressed={i===index} onClick={()=>setIndex(i)} className={`size-20 shrink-0 border bg-[#F7F6F3] ${i===index?'border-[#101010]':'border-[#e5dfd6]'}`}><img src={getMediaUrl(src)??undefined} alt={`${productName} ${i+1}`} className="h-full w-full object-contain"/></button>)}</div>}
+ <dialog ref={dialog} aria-label={`Galería de ${productName}`} className="fixed inset-0 m-auto max-h-[95dvh] w-[94vw] max-w-5xl bg-white p-4 backdrop:bg-black/80" onKeyDown={e=>{if(images.length>1&&e.key==='ArrowLeft')move(-1);if(images.length>1&&e.key==='ArrowRight')move(1);}}><div className="flex items-center justify-between gap-4"><p className="text-sm">{productName} · {index+1}/{images.length}</p><button type="button" aria-label="Cerrar galería" onClick={()=>dialog.current?.close()} className="p-3"><X/></button></div><img src={getMediaUrl(selected)??undefined} alt={productName} className="mx-auto max-h-[70dvh] w-full object-contain"/>{images.length>1&&<div className="flex justify-center gap-4"><button type="button" aria-label="Anterior" onClick={()=>move(-1)} className="border p-3"><ChevronLeft/></button><button type="button" aria-label="Siguiente" onClick={()=>move(1)} className="border p-3"><ChevronRight/></button></div>}</dialog></div>;
 }

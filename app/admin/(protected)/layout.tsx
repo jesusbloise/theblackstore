@@ -50,6 +50,7 @@ export default async function ProtectedAdminLayout({
               Categorías
             </Link>
 
+            <Link href="/admin/banners" className="block rounded-lg px-3 py-2 hover:bg-slate-800">Banners y campañas</Link>
             <Link
               href="/admin/pedidos"
               className="block rounded-lg px-3 py-2 hover:bg-slate-800"

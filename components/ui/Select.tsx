@@ -43,7 +43,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={generatedId}
-            className="mb-2 block text-sm font-bold text-brand-950"
+            className="mb-2 block text-sm font-semibold text-brand-950"
           >
             {label}
 
@@ -58,7 +58,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <div className="relative">
           {leftIcon && (
             <div
-              className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500"
+              className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[#666666]"
               aria-hidden="true"
             >
               {leftIcon}
@@ -73,13 +73,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             aria-invalid={Boolean(error)}
             aria-describedby={descriptionId}
             className={[
-              "min-h-12 w-full appearance-none rounded-xl border bg-white px-4 pr-11 text-base text-brand-950",
+              "min-h-12 w-full appearance-none rounded-[4px] border bg-white px-4 pr-11 text-base text-brand-950",
               "transition-colors duration-200",
               "focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-accent-300",
-              "disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500",
+              "disabled:cursor-not-allowed disabled:bg-brand-50 disabled:text-[#666666]",
               error
                 ? "border-red-500 focus:border-red-600 focus:ring-red-200"
-                : "border-slate-300 hover:border-brand-400",
+                : "border-brand-200 hover:border-brand-400",
               leftIcon ? "pl-11" : "",
               className,
             ]
@@ -91,7 +91,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
 
           <div
-            className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500"
+            className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-[#666666]"
             aria-hidden="true"
           >
             <ChevronDown size={18} />
@@ -108,7 +108,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         ) : helperText ? (
           <p
             id={`${generatedId}-helper`}
-            className="mt-2 text-sm text-slate-500"
+            className="mt-2 text-sm text-[#666666]"
           >
             {helperText}
           </p>

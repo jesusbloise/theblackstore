@@ -7,6 +7,8 @@ export type CatalogParams = {
   min?: string;
   max?: string;
   pagina?: string;
+  categoria?: string;
+  disponible?: string;
 };
 
 const PAGE_SIZE = 12;
@@ -26,13 +28,13 @@ export async function loadCatalog(params: CatalogParams, categoryIds?: string[])
 
   const variantCondition: Prisma.ProductVariantWhereInput = {
     isActive: true,
-    ...(min !== undefined ? { price: { gte: min, ...(max !== undefined ? { lte: max } : {}) } } : max !== undefined ? { price: { lte: max } } : {}),
-    OR: [{ manageInventory: false }, { stock: { gt: 0 } }, { allowBackorder: true }],
+    price: { gt: 0, ...(min !== undefined ? { gte: min } : {}), ...(max !== undefined ? { lte: max } : {}) },
+    ...(params.disponible === "1" ? { OR: [{ manageInventory: false }, { stock: { gt: 0 } }, { allowBackorder: true }] } : {}),
   };
   const where: Prisma.ProductWhereInput = {
     status: "PUBLISHED",
     variants: { some: variantCondition },
-    ...(categoryIds ? { categories: { some: { categoryId: { in: categoryIds } } } } : {}),
+    ...(categoryIds ? { categories: { some: { categoryId: { in: categoryIds } } } } : params.categoria ? { categories: { some: { category: { isActive: true, OR: [{ slug: params.categoria }, { parent: { slug: params.categoria, isActive: true } }] } } } } : {}),
     ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { description: { contains: q, mode: "insensitive" } }, { brand: { contains: q, mode: "insensitive" } }] } : {}),
   };
 
@@ -47,7 +49,8 @@ export async function loadCatalog(params: CatalogParams, categoryIds?: string[])
       orderBy: order === "nombre" ? { name: "asc" } : { createdAt: "desc" },
       select: {
         id: true, name: true, slug: true, createdAt: true,
-        images: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 1, select: { url: true } },
+        _count: { select: { variants: { where: { isActive: true, price: { gt: 0 }, OR: [{ manageInventory: false }, { stock: { gt: 0 } }, { allowBackorder: true }] } } } },
+        images: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 2, select: { url: true } },
         categories: { take: 1, select: { category: { select: { name: true } } } },
         variants: { where: variantCondition, orderBy: { price: "asc" }, take: 1, select: { price: true, compareAtPrice: true } },
       },

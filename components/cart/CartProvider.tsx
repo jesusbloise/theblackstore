@@ -17,7 +17,7 @@ import type {
   DeliveryZone,
 } from "@/lib/types/cart";
 
-const CART_STORAGE_KEY = "incal-cart";
+const CART_STORAGE_KEY = "theblackstore-cart-v1";
 
 type StoredCart = {
   items: CartItem[];
@@ -26,6 +26,9 @@ type StoredCart = {
 };
 
 type CartContextValue = {
+  isCartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
   items: CartItem[];
   deliveryMethod: DeliveryMethod;
   deliveryZone: DeliveryZone;
@@ -169,6 +172,9 @@ export function CartProvider({
 }: {
   children: ReactNode;
 }) {
+  const [isCartOpen, setCartOpen] = useState(false);
+  const openCart = useCallback(() => setCartOpen(true), []);
+  const closeCart = useCallback(() => setCartOpen(false), []);
   const [items, setItems] = useState<
     CartItem[]
   >([]);
@@ -260,9 +266,9 @@ export function CartProvider({
               cartItemId
                 ? {
                     ...item,
+                    maxQuantity: input.maxQuantity,
                     quantity:
-                      item.quantity +
-                      quantity,
+                      Math.min(input.maxQuantity ?? 100, item.quantity + quantity),
                   }
                 : item,
           );
@@ -271,7 +277,7 @@ export function CartProvider({
         const newItem: CartItem = {
           ...input,
           cartItemId,
-          quantity,
+          quantity: Math.min(input.maxQuantity ?? 100, quantity),
         };
 
         return [
@@ -279,8 +285,9 @@ export function CartProvider({
           newItem,
         ];
       });
+      openCart();
     },
-    [],
+    [openCart],
   );
 
   const removeItem = useCallback(
@@ -306,7 +313,7 @@ export function CartProvider({
               ? {
                   ...item,
                   quantity:
-                    item.quantity + 1,
+                    Math.min(item.maxQuantity ?? 100, item.quantity + 1),
                 }
               : item,
           ),
@@ -367,7 +374,7 @@ export function CartProvider({
               ? {
                   ...item,
                   quantity:
-                    normalizedQuantity,
+                    Math.min(item.maxQuantity ?? 100, normalizedQuantity),
                 }
               : item,
           ),
@@ -414,6 +421,7 @@ export function CartProvider({
   const value =
     useMemo<CartContextValue>(
       () => ({
+        isCartOpen, openCart, closeCart,
         items,
         deliveryMethod,
         deliveryZone,
@@ -431,6 +439,7 @@ export function CartProvider({
         setDeliveryZone,
       }),
       [
+        isCartOpen, openCart, closeCart,
         items,
         deliveryMethod,
         deliveryZone,

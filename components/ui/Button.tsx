@@ -25,19 +25,19 @@ const variantClasses: Record<ButtonVariant, string> = {
     "bg-accent-400 text-brand-950 hover:bg-accent-500 active:bg-accent-600 disabled:bg-accent-100 disabled:text-brand-400",
 
   outline:
-    "border border-brand-300 bg-white text-brand-950 hover:border-brand-500 hover:bg-brand-50 active:bg-brand-100 disabled:border-slate-200 disabled:text-slate-400",
+    "border border-brand-300 bg-white text-brand-950 hover:border-brand-500 hover:bg-brand-50 active:bg-brand-100 disabled:border-brand-100 disabled:text-[#777777]",
 
   ghost:
-    "bg-transparent text-brand-950 hover:bg-brand-50 active:bg-brand-100 disabled:text-slate-400",
+    "bg-transparent text-brand-950 hover:bg-brand-50 active:bg-brand-100 disabled:text-[#777777]",
 
   danger:
     "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 disabled:bg-red-300",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "min-h-9 rounded-lg px-4 text-sm",
-  md: "min-h-11 rounded-xl px-5 text-sm",
-  lg: "min-h-13 rounded-xl px-6 text-base",
+  sm: "min-h-9 rounded-[4px] px-4 text-sm",
+  md: "min-h-11 rounded-[4px] px-5 text-sm",
+  lg: "min-h-13 rounded-[4px] px-6 text-base",
 };
 
 export function Button({
@@ -59,7 +59,7 @@ export function Button({
       disabled={isDisabled}
       aria-busy={isLoading}
       className={[
-        "inline-flex items-center justify-center gap-2 font-bold transition-colors duration-200",
+        "inline-flex cursor-pointer items-center justify-center gap-2 font-semibold transition-colors duration-200",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2",
         "disabled:cursor-not-allowed",
         variantClasses[variant],
@@ -78,7 +78,7 @@ export function Button({
         />
       )}
 
-      <span>{isLoading ? "Cargando..." : children}</span>
+      <span className="inline-flex items-center justify-center gap-2">{isLoading ? "Cargando..." : children}</span>
     </button>
   );
 }

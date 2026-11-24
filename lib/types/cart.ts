@@ -8,12 +8,12 @@ export type CartItemConfiguration = {
 export type CartItem = {
   /**
    * Identificador interno del producto.
-   * Normalmente será el ID del producto de Medusa.
+   * ID del producto en PostgreSQL.
    */
   id: string;
 
   /**
-   * Identificador de la variante de Medusa.
+   * Identificador de la variante.
    */
   variantId?: string;
 
@@ -35,6 +35,7 @@ export type CartItem = {
   price: number;
 
   quantity: number;
+  maxQuantity?: number;
 
   /**
    * Información visible debajo del nombre.
@@ -57,8 +58,7 @@ export type CartItem = {
   dimensioned?: boolean;
 
   /**
-   * Metadata adicional que podremos enviar posteriormente
-   * a Medusa o guardar junto con la línea del carrito.
+   * Metadata adicional de la línea del carrito.
    */
   metadata?: Record<string, string | number | boolean>;
 };

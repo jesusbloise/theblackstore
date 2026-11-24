@@ -58,7 +58,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               required={required}
               aria-invalid={Boolean(error)}
               aria-describedby={descriptionId}
-              className="peer h-5 w-5 appearance-none rounded-md border border-slate-300 bg-white transition-colors checked:border-brand-950 checked:bg-brand-950 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+              className="peer h-5 w-5 appearance-none rounded-[4px] border border-brand-200 bg-white transition-colors checked:border-brand-950 checked:bg-brand-950 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
               {...props}
             />
 
@@ -84,7 +84,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             {description && !error && (
               <span
                 id={`${checkboxId}-description`}
-                className="mt-1 block text-sm leading-5 text-slate-500"
+                className="mt-1 block text-sm leading-5 text-[#666666]"
               >
                 {description}
               </span>

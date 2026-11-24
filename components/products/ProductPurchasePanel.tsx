@@ -14,7 +14,7 @@ import {
 import { useCart } from "@/components/cart/CartProvider";
 import { Button } from "@/components/ui/Button";
 import { Price } from "@/components/ui/Price";
-import { Select } from "@/components/ui/Select";
+
 
 type PurchaseVariant = {
   id: string;
@@ -78,7 +78,7 @@ export function ProductPurchasePanel({
   dimensioned = false,
   maxQuantity = 10,
 }: ProductPurchasePanelProps) {
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
 
   const firstAvailableVariant =
     variants.find(isVariantAvailable) ??
@@ -179,7 +179,7 @@ export function ProductPurchasePanel({
 
     if (!variantAvailable) {
       setError(
-        "Esta medida no tiene stock disponible.",
+        "Esta variante no tiene stock disponible.",
       );
 
       return;
@@ -188,6 +188,11 @@ export function ProductPurchasePanel({
     const variantLabel =
       getVariantLabel(selectedVariant);
 
+    const alreadyInCart = items.filter(item => item.variantId === selectedVariant.id).reduce((sum, item) => sum + item.quantity, 0);
+    if (alreadyInCart + quantity > quantityLimit) {
+      setError(`Ya tienes ${alreadyInCart} unidades en el carrito. Máximo ${quantityLimit}.`);
+      return;
+    }
     setError("");
 
  addItem({
@@ -199,6 +204,7 @@ export function ProductPurchasePanel({
   href: productHref,
   price: selectedVariant.price,
   quantity,
+  maxQuantity: quantityLimit,
   subtitle: variantLabel,
   dimensioned,
   metadata: {
@@ -218,7 +224,7 @@ export function ProductPurchasePanel({
     !selectedVariant
   ) {
     return (
-      <div className="mt-7 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+      <div className="mt-7 rounded-sm border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
         Este producto todavía no tiene variantes
         disponibles para comprar.
       </div>
@@ -235,45 +241,17 @@ export function ProductPurchasePanel({
         size="lg"
       />
 
-      <Select
-        label="Medida"
-        name="variant"
-        value={selectedVariantId}
-        error={error}
-        required
-        onChange={(event) =>
-          handleVariantChange(
-            event.target.value,
-          )
-        }
-      >
-        {variants.map((variant) => {
-          const available =
-            isVariantAvailable(variant);
+      {variants.length > 1 && <fieldset><legend className="mb-3 text-sm font-medium">Selecciona una variante</legend><div className="flex flex-wrap gap-2">{variants.map(v=><button key={v.id} type="button" aria-pressed={selectedVariantId===v.id} onClick={()=>handleVariantChange(v.id)} className={`border px-4 py-3 text-sm ${selectedVariantId===v.id?'border-[#101010] bg-[#101010] text-white':'border-[#d8d0c4] bg-white'} ${!isVariantAvailable(v)?'opacity-60':''}`}>{getVariantLabel(v)}{!isVariantAvailable(v)?' · Agotado':''}</button>)}</div></fieldset>}
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
 
-          return (
-            <option
-              key={variant.id}
-              value={variant.id}
-              disabled={!available}
-            >
-              {getVariantLabel(variant)}
-              {!available
-                ? " — Agotado"
-                : ""}
-            </option>
-          );
-        })}
-      </Select>
-
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="rounded-sm border border-[#e5dfd6] bg-[#F7F6F3] p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
               SKU
             </p>
 
-            <p className="mt-1 text-sm font-extrabold text-brand-950">
+            <p className="mt-1 text-sm font-extrabold text-[#101010]">
               {selectedVariant.sku}
             </p>
           </div>
@@ -303,23 +281,23 @@ export function ProductPurchasePanel({
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-bold text-brand-950">
+        <p className="mb-2 text-sm font-bold text-[#101010]">
           Cantidad
         </p>
 
-        <div className="inline-flex h-12 items-center overflow-hidden rounded-xl border border-slate-300 bg-white">
+        <div className="inline-flex h-12 items-center overflow-hidden rounded-sm border border-[#d8d0c4] bg-white">
           <button
             type="button"
             aria-label="Disminuir cantidad"
             disabled={quantity === 1}
             onClick={decreaseQuantity}
-            className="inline-flex h-full w-12 items-center justify-center text-brand-950 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35"
+            className="inline-flex h-full w-12 items-center justify-center text-[#101010] transition hover:bg-[#eee9e1] disabled:cursor-not-allowed disabled:opacity-35"
           >
             <Minus size={18} />
           </button>
 
           <div
-            className="flex h-full min-w-14 items-center justify-center border-x border-slate-300 px-3 text-sm font-extrabold text-brand-950"
+            className="flex h-full min-w-14 items-center justify-center border-x border-[#d8d0c4] px-3 text-sm font-extrabold text-[#101010]"
             aria-live="polite"
           >
             {quantity}
@@ -333,15 +311,15 @@ export function ProductPurchasePanel({
               quantity >= quantityLimit
             }
             onClick={increaseQuantity}
-            className="inline-flex h-full w-12 items-center justify-center text-brand-950 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35"
+            className="inline-flex h-full w-12 items-center justify-center text-[#101010] transition hover:bg-[#eee9e1] disabled:cursor-not-allowed disabled:opacity-35"
           >
             <Plus size={18} />
           </button>
         </div>
 
         <p className="mt-2 text-xs text-slate-500">
-          Máximo {quantityLimit} unidades para
-          esta medida.
+          Máximo {variantAvailable ? quantityLimit : 0} unidades para
+          esta variante.
         </p>
       </div>
 
@@ -360,7 +338,7 @@ export function ProductPurchasePanel({
         ) : (
           <>
             <ShoppingCart size={20} />
-            Agregar al carrito
+            Agregar a mi bolsa
           </>
         )}
       </Button>
@@ -368,11 +346,11 @@ export function ProductPurchasePanel({
       {added && (
         <div
           role="status"
-          className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800"
+          className="rounded-sm border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800"
         >
           Agregaste {quantity} unidad
           {quantity !== 1 ? "es" : ""} de{" "}
-          {productName}, medida{" "}
+          {productName}, variante{" "}
           {getVariantLabel(
             selectedVariant,
           )}

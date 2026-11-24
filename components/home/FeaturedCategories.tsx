@@ -22,16 +22,16 @@ export async function FeaturedCategories({ categories }: { categories: CategoryW
     return { ...category, cover: product?.images[0]?.url ?? null };
   }));
   return (
-    <section className="py-16 sm:py-24">
+    <section className="py-12 sm:py-16">
       <Container>
         <p className="text-xs font-semibold uppercase tracking-[.24em] text-[#927451]">Descubre</p>
         <div className="mt-3 flex items-end justify-between gap-4">
           <h2 className="text-3xl font-medium tracking-tight sm:text-4xl">Compra por categoría</h2>
           <Link href="/productos" className="text-sm underline underline-offset-4">Ver productos</Link>
         </div>
-        <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className={`mt-9 grid grid-cols-2 gap-3 sm:gap-4 ${cards.length===1?"sm:grid-cols-1":cards.length===2?"sm:grid-cols-2":cards.length===3?"sm:grid-cols-3":"lg:grid-cols-4"}`}>
           {cards.map((category) => (
-            <Link href={`/categoria/${category.slug}`} key={category.id} className="group relative isolate flex aspect-[4/5] min-h-64 overflow-hidden bg-[#e8e3dc]">
+            <Link href={`/categoria/${category.slug}`} key={category.id} className="group relative isolate flex aspect-[4/5] min-h-40 sm:min-h-64 overflow-hidden bg-[#e8e3dc]">
               {category.cover ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={getMediaUrl(category.cover) ?? undefined} alt={`Colección ${category.name}`} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -39,8 +39,8 @@ export async function FeaturedCategories({ categories }: { categories: CategoryW
                 <div className="absolute inset-0 bg-gradient-to-br from-[#dcd4c8] via-[#eee9e2] to-[#c5b9a9]" aria-hidden="true" />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" aria-hidden="true" />
-              <div className="relative mt-auto w-full p-6 text-white">
-                <h3 className="text-2xl font-medium">{category.name}</h3>
+              <div className="relative mt-auto w-full p-3 sm:p-6 text-white">
+                <h3 className="text-lg sm:text-2xl font-medium">{category.name}</h3>
                 <p className="mt-2 text-sm text-white/85">Explorar colección <span aria-hidden="true">→</span></p>
               </div>
             </Link>

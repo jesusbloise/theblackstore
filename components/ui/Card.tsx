@@ -34,10 +34,10 @@ type CardFooterProps = HTMLAttributes<HTMLDivElement> & {
 
 const variantClasses: Record<CardVariant, string> = {
   default:
-    "border border-slate-200 bg-white shadow-[var(--incal-shadow-sm)]",
+    "border border-brand-100 bg-white shadow-[var(--incal-shadow-sm)]",
 
   outlined:
-    "border border-slate-200 bg-white",
+    "border border-brand-100 bg-white",
 
   soft:
     "border border-brand-100 bg-brand-50",
@@ -60,7 +60,7 @@ export function Card({
   return (
     <div
       className={[
-        "rounded-2xl",
+        "rounded-[4px]",
         variantClasses[variant],
         paddingClasses[padding],
         className,
@@ -102,7 +102,7 @@ export function CardTitle({
   return (
     <h3
       className={[
-        "text-lg font-extrabold tracking-tight text-brand-950",
+        "text-lg font-semibold tracking-tight text-brand-950",
         className,
       ]
         .filter(Boolean)
@@ -122,7 +122,7 @@ export function CardDescription({
   return (
     <p
       className={[
-        "text-sm leading-6 text-slate-600",
+        "text-sm leading-6 text-[#666666]",
         className,
       ]
         .filter(Boolean)

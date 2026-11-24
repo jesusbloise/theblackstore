@@ -6,19 +6,21 @@ import { useState, type FormEvent } from "react";
 type Sort = "recientes" | "precio-asc" | "precio-desc" | "nombre";
 const SORTS: Sort[] = ["recientes", "precio-asc", "precio-desc", "nombre"];
 
-export function CatalogControls({ count }: { count: number }) {
+export function CatalogControls({ count, categories = [] }: { count: number; categories?: { name: string; slug: string }[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const current = useSearchParams();
   const [q, setQ] = useState(current.get("q") ?? "");
   const [min, setMin] = useState(current.get("min") ?? "");
   const [max, setMax] = useState(current.get("max") ?? "");
+  const [categoria, setCategoria] = useState(current.get("categoria") ?? "");
+  const [disponible, setDisponible] = useState(current.get("disponible") === "1");
   const activeSort = current.get("orden") ?? "recientes";
-  const activeFilters = [current.get("q"), current.get("min"), current.get("max")].filter(Boolean).length;
+  const activeFilters = [current.get("q"), current.get("min"), current.get("max"), current.get("categoria"), current.get("disponible")].filter(Boolean).length;
 
-  function go(values: { q?: string; min?: string; max?: string; orden?: string }) {
+  function go(values: { q?: string; min?: string; max?: string; orden?: string; categoria?: string; disponible?: string }) {
     const query = new URLSearchParams(current.toString());
-    for (const key of ["q", "min", "max", "orden"] as const) {
+    for (const key of ["q", "min", "max", "orden", "categoria", "disponible"] as const) {
       const value = values[key];
       if (value !== undefined) {
         if (value.trim() && !(key === "orden" && value === "recientes")) query.set(key, value.trim());
@@ -32,14 +34,15 @@ export function CatalogControls({ count }: { count: number }) {
 
   function apply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    go({ q, min, max });
+    go({ q, min, max, categoria, disponible: disponible ? "1" : "" });
     const details = (event.currentTarget.closest("details"));
     if (details) details.open = false;
   }
 
   function clear() {
     setQ(""); setMin(""); setMax("");
-    go({ q: "", min: "", max: "" });
+    setCategoria(""); setDisponible(false);
+    go({ q: "", min: "", max: "", categoria: "", disponible: "" });
   }
 
   return (
@@ -57,6 +60,8 @@ export function CatalogControls({ count }: { count: number }) {
                 <label className="block text-xs font-medium text-[#555]">Buscar por nombre o marca
                   <input value={q} onChange={(e) => setQ(e.target.value)} maxLength={100} placeholder="Buscar productos" className="mt-2 h-10 w-full border border-[#ded6c9] px-3 text-sm text-[#101010] outline-offset-2" />
                 </label>
+                {categories.length > 0 && <label className="block text-xs font-medium">Categoría<select value={categoria} onChange={e => setCategoria(e.target.value)} className="mt-2 h-10 w-full border border-[#ded6c9] bg-white px-3"><option value="">Todas</option>{categories.map(c => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></label>}
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={disponible} onChange={e => setDisponible(e.target.checked)} className="accent-black"/> Solo disponibles</label>
                 <p className="text-xs font-medium text-[#555]">Rango de precio (CLP)</p>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block text-xs text-[#777]">Desde

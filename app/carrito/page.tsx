@@ -69,8 +69,8 @@ function ProgressStepper() {
               className={[
                 "flex size-7 items-center justify-center rounded-full border-2 text-xs font-bold",
                 step.active
-                  ? "border-[#1B3A6B] bg-[#1B3A6B] text-white"
-                  : "border-slate-200 bg-slate-50 text-slate-400",
+                  ? "border-[#101010] bg-[#101010] text-white"
+                  : "border-[#e8e5df] bg-brand-50 text-neutral-500",
               ].join(" ")}
             >
               {index + 1}
@@ -80,8 +80,8 @@ function ProgressStepper() {
               className={[
                 "hidden text-[13px] sm:block",
                 step.active
-                  ? "font-semibold text-slate-900"
-                  : "font-normal text-slate-400",
+                  ? "font-semibold text-brand-950"
+                  : "font-normal text-neutral-500",
               ].join(" ")}
             >
               {step.label}
@@ -89,7 +89,7 @@ function ProgressStepper() {
           </div>
 
           {index < steps.length - 1 && (
-            <div className="mx-3 h-0.5 flex-1 bg-slate-200" />
+            <div className="mx-3 h-0.5 flex-1 bg-brand-200" />
           )}
         </div>
       ))}
@@ -107,14 +107,14 @@ function DestinationSelector({
   onChange,
 }: DestinationSelectorProps) {
   return (
-    <div className="mb-6 flex flex-col gap-3 rounded-[10px] border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center">
+    <div className="mb-6 flex flex-col gap-3 rounded-sm border border-[#e8e5df] bg-white px-4 py-3 sm:flex-row sm:items-center">
       <div className="flex items-center gap-2.5">
         <MapPin
           size={17}
-          className="text-[#1B3A6B]"
+          className="text-[#101010]"
         />
 
-        <span className="text-[13px] font-semibold text-slate-900">
+        <span className="text-[13px] font-semibold text-brand-950">
           ¿Dónde entregaremos?
         </span>
       </div>
@@ -124,10 +124,10 @@ function DestinationSelector({
           type="button"
           onClick={() => onChange("santiago")}
           className={[
-            "rounded-lg border-[1.5px] px-4 py-1.5 text-[13px] font-semibold transition",
+            "rounded-md border-[1.5px] px-4 py-1.5 text-[13px] font-semibold transition",
             value === "santiago"
-              ? "border-[#1B3A6B] bg-[#1B3A6B] text-white"
-              : "border-slate-200 bg-white text-slate-500 hover:border-[#1B3A6B]",
+              ? "border-[#101010] bg-[#101010] text-white"
+              : "border-[#e8e5df] bg-white text-neutral-600 hover:border-[#101010]",
           ].join(" ")}
         >
           Santiago
@@ -137,10 +137,10 @@ function DestinationSelector({
           type="button"
           onClick={() => onChange("region")}
           className={[
-            "rounded-lg border-[1.5px] px-4 py-1.5 text-[13px] font-semibold transition",
+            "rounded-md border-[1.5px] px-4 py-1.5 text-[13px] font-semibold transition",
             value === "region"
-              ? "border-[#1B3A6B] bg-[#1B3A6B] text-white"
-              : "border-slate-200 bg-white text-slate-500 hover:border-[#1B3A6B]",
+              ? "border-[#101010] bg-[#101010] text-white"
+              : "border-[#e8e5df] bg-white text-neutral-600 hover:border-[#101010]",
           ].join(" ")}
         >
           Región
@@ -170,10 +170,10 @@ function DeliveryOption({
   return (
     <label
       className={[
-        "flex flex-1 cursor-pointer items-center gap-3 rounded-[10px] border-[1.5px] px-3 py-3 transition",
+        "flex flex-1 cursor-pointer items-center gap-3 rounded-sm border-[1.5px] px-3 py-3 transition",
         selected
-          ? "border-[#1D4ED8] bg-[#EFF6FF]"
-          : "border-slate-200 bg-white hover:border-slate-300",
+          ? "border-accent-400 bg-[#F5EEE2]"
+          : "border-[#e8e5df] bg-white hover:border-brand-200",
       ].join(" ")}
     >
       <input
@@ -181,19 +181,19 @@ function DeliveryOption({
         name="delivery"
         checked={selected}
         onChange={() => onChange(id)}
-        className="size-4 accent-[#1D4ED8]"
+        className="size-4 accent-[#101010]"
       />
 
-      <span className="text-[#1B3A6B]">
+      <span className="text-[#101010]">
         {icon}
       </span>
 
       <span>
-        <span className="block text-sm font-semibold text-slate-900">
+        <span className="block text-sm font-semibold text-brand-950">
           {title}
         </span>
 
-        <span className="mt-0.5 block text-xs text-slate-500">
+        <span className="mt-0.5 block text-xs text-neutral-600">
           {subtitle}
         </span>
       </span>
@@ -217,17 +217,17 @@ function InfoBanner({
   return (
     <div
       className={[
-        "flex gap-2.5 rounded-lg border px-3.5 py-2.5",
+        "flex gap-2.5 rounded-md border px-3.5 py-2.5",
         isAmber
           ? "border-amber-200 bg-amber-50"
-          : "border-blue-200 bg-blue-50",
+          : "border-accent-300 bg-accent-50",
       ].join(" ")}
     >
       <span
         className={
           isAmber
             ? "text-amber-700"
-            : "text-blue-700"
+            : "text-brand-700"
         }
       >
         {isAmber ? (
@@ -238,12 +238,12 @@ function InfoBanner({
       </span>
 
       <div>
-        <p className="text-[13px] font-semibold text-slate-900">
+        <p className="text-[13px] font-semibold text-brand-950">
           {title}
         </p>
 
         {description && (
-          <p className="mt-0.5 text-xs leading-5 text-slate-500">
+          <p className="mt-0.5 text-xs leading-5 text-neutral-600">
             {description}
           </p>
         )}
@@ -285,7 +285,7 @@ export default function CartPage() {
 
   const whatsappMessage =
     encodeURIComponent(
-      "Hola, necesito cotizar el despacho de un producto dimensionado de mi carrito Incal.",
+      "Hola, necesito cotizar el despacho de un producto dimensionado de mi carrito The Black Store.",
     );
 
   const whatsappUrl =
@@ -293,18 +293,18 @@ export default function CartPage() {
 
   if (!isHydrated) {
     return (
-      <main className="min-h-[65vh] bg-[#F8FAFC] py-8">
+      <main className="min-h-[65vh] bg-[#F7F6F3] py-8">
         <Container>
-          <div className="mx-auto h-96 max-w-[1000px] animate-pulse rounded-2xl bg-white" />
+          <div className="mx-auto h-96 max-w-[1120px] animate-pulse rounded-2xl bg-white" />
         </Container>
       </main>
     );
   }
 
   return (
-    <main className="min-h-[70vh] bg-[#F8FAFC] py-6 sm:py-8">
+    <main className="min-h-[70vh] bg-[#F7F6F3] py-8 sm:py-12">
       <Container>
-        <div className="mx-auto max-w-[1000px]">
+        <div className="mx-auto max-w-[1120px]">
           <ProgressStepper />
 
           <DestinationSelector
@@ -313,25 +313,25 @@ export default function CartPage() {
           />
 
           {items.length === 0 ? (
-            <section className="rounded-[14px] border border-slate-200 bg-white px-6 py-14 text-center">
-              <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <section className="rounded-md border border-[#e8e5df] bg-white px-6 py-14 text-center">
+              <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-brand-100 text-neutral-500">
                 <PackageOpen size={29} />
               </span>
 
-              <h1 className="mt-5 text-2xl font-extrabold text-slate-900">
+              <h1 className="mt-5 text-2xl font-extrabold text-brand-950">
                 Tu carrito está vacío
               </h1>
 
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-neutral-600">
                 Agrega productos para comenzar
                 tu compra.
               </p>
 
               <Link
-                href="/colchones"
-                className="mt-6 inline-flex items-center gap-2 rounded-[10px] bg-[#1B3A6B] px-5 py-3 text-sm font-semibold text-white"
+                href="/productos"
+                className="mt-6 inline-flex items-center gap-2 rounded-sm bg-[#101010] px-5 py-3 text-sm font-semibold text-white"
               >
-                Ver colchones
+                Ver productos
                 <ChevronRight size={17} />
               </Link>
             </section>
@@ -339,13 +339,13 @@ export default function CartPage() {
             <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
               <section>
                 <div className="mb-4 flex items-center justify-between gap-4">
-                  <h1 className="text-lg font-bold text-slate-900">
+                  <h1 className="text-2xl font-semibold tracking-tight text-brand-950 sm:text-3xl">
                     Tu carrito
                   </h1>
 
                   <Link
-                    href="/colchones"
-                    className="text-xs font-semibold text-[#1D4ED8] hover:underline"
+                    href="/productos"
+                    className="text-xs font-semibold text-[#101010] hover:underline"
                   >
                     Seguir comprando
                   </Link>
@@ -355,24 +355,24 @@ export default function CartPage() {
                   {items.map((item) => (
                     <article
                       key={item.cartItemId}
-                      className="flex items-center gap-3.5 rounded-xl border border-slate-200 bg-white p-4"
+                      className="flex items-center gap-3.5 rounded-md border border-[#e8e5df] bg-white p-4"
                     >
                       <Link
                         href={item.href ?? "#"}
-                        className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-50"
+                        className="relative flex size-16 shrink-0 sm:size-20 items-center justify-center overflow-hidden rounded-md bg-brand-50"
                       >
                         {item.image ? (
                           <Image
                             src={item.image}
                             alt={item.name}
                             fill
-                            sizes="56px"
+                            sizes="(min-width: 640px) 80px, 64px"
                             className="object-cover"
                           />
                         ) : (
                           <ShoppingBag
                             size={23}
-                            className="text-slate-400"
+                            className="text-neutral-500"
                           />
                         )}
                       </Link>
@@ -380,13 +380,13 @@ export default function CartPage() {
                       <div className="min-w-0 flex-1">
                         <Link
                           href={item.href ?? "#"}
-                          className="block truncate text-sm font-semibold text-slate-900 hover:text-[#1D4ED8]"
+                          className="block truncate text-sm font-semibold text-brand-950 hover:text-[#101010]"
                         >
                           {item.name}
                         </Link>
 
                         {item.subtitle && (
-                          <p className="mt-0.5 text-xs text-slate-500">
+                          <p className="mt-0.5 text-xs text-neutral-600">
                             {item.subtitle}
                           </p>
                         )}
@@ -403,7 +403,7 @@ export default function CartPage() {
 
                       <div className="shrink-0 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <p className="text-[15px] font-bold text-slate-900">
+                          <p className="text-[15px] font-semibold text-brand-950">
                             {formatCLP(
                               item.price *
                                 item.quantity,
@@ -418,7 +418,7 @@ export default function CartPage() {
                               )
                             }
                             aria-label={`Eliminar ${item.name}`}
-                            className="ml-1 flex size-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                            className="ml-1 flex size-7 items-center justify-center rounded-md text-neutral-500 transition hover:bg-red-50 hover:text-red-600"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -432,13 +432,13 @@ export default function CartPage() {
                                 item.cartItemId,
                               )
                             }
-                            className="flex size-[26px] items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                            className="flex size-8 items-center justify-center rounded-md border border-[#e8e5df] bg-white text-neutral-600 hover:bg-brand-50"
                             aria-label="Disminuir cantidad"
                           >
                             <Minus size={13} />
                           </button>
 
-                          <span className="min-w-5 text-center text-sm font-semibold text-slate-900">
+                          <span className="min-w-5 text-center text-sm font-semibold text-brand-950">
                             {item.quantity}
                           </span>
 
@@ -449,7 +449,8 @@ export default function CartPage() {
                                 item.cartItemId,
                               )
                             }
-                            className="flex size-[26px] items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                            className="flex size-8 items-center justify-center rounded-md border border-[#e8e5df] bg-white text-neutral-600 hover:bg-brand-50"
+                            disabled={item.quantity >= (item.maxQuantity ?? 100)}
                             aria-label="Aumentar cantidad"
                           >
                             <Plus size={13} />
@@ -461,9 +462,9 @@ export default function CartPage() {
                 </div>
               </section>
 
-              <aside className="rounded-[14px] border border-slate-200 bg-white p-5 lg:sticky lg:top-24">
+              <aside className="rounded-md border border-[#e8e5df] bg-white p-5 lg:sticky lg:top-24">
                 <div>
-                  <p className="mb-2.5 text-[13px] font-semibold uppercase tracking-[0.05em] text-slate-500">
+                  <p className="mb-2.5 text-[13px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
                     Entrega
                   </p>
 
@@ -523,21 +524,21 @@ export default function CartPage() {
                     )}
                 </div>
 
-                <div className="my-4 h-px bg-slate-200" />
+                <div className="my-4 h-px bg-brand-200" />
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">
+                    <span className="text-neutral-600">
                       Subtotal
                     </span>
 
-                    <span className="text-slate-900">
+                    <span className="text-brand-950">
                       {formatCLP(subtotal)}
                     </span>
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">
+                    <span className="text-neutral-600">
                       Envío
                     </span>
 
@@ -545,7 +546,7 @@ export default function CartPage() {
                       className={
                         isPickup
                           ? "font-semibold text-green-600"
-                          : "text-slate-900"
+                          : "text-brand-950"
                       }
                     >
                       {isPickup
@@ -559,9 +560,9 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <div className="my-4 h-px bg-slate-200" />
+                <div className="my-4 h-px bg-brand-200" />
 
-                <div className="flex items-center justify-between text-[17px] font-bold text-slate-900">
+                <div className="flex items-center justify-between text-[17px] font-bold text-brand-950">
                   <span>Total</span>
 
                   <span>
@@ -577,7 +578,7 @@ hasDimensionedProducts ? (
   <button
     type="button"
     disabled
-    className="mt-4 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-[10px] bg-slate-300 px-6 py-[13px] text-[15px] font-semibold text-white"
+    className="mt-4 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-sm bg-neutral-400 px-6 py-[13px] text-[15px] font-semibold text-white"
   >
     Ir al pago
     <ChevronRight size={17} />
@@ -585,7 +586,7 @@ hasDimensionedProducts ? (
 ) : (
   <Link
     href="/checkout"
-    className="mt-4 flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#1B3A6B] px-6 py-[13px] text-[15px] font-semibold text-white transition hover:opacity-90"
+    className="mt-4 flex w-full items-center justify-center gap-2 rounded-sm bg-[#101010] px-6 py-[13px] text-[15px] font-semibold text-white transition hover:bg-brand-800"
   >
     Ir al pago
     <ChevronRight size={17} />
@@ -599,7 +600,7 @@ hasDimensionedProducts ? (
                       href={whatsappUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-[10px] border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-[13px] font-semibold text-emerald-800"
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-sm border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-[13px] font-semibold text-emerald-800"
                     >
                       <MessageCircle size={16} />
                       Cotizar envío por WhatsApp
@@ -611,7 +612,7 @@ hasDimensionedProducts ? (
                     href={`https://wa.me/${WHATSAPP_NUMBER}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-500 hover:text-[#1B3A6B]"
+                    className="mt-3 flex items-center justify-center gap-1.5 text-xs text-neutral-600 hover:text-[#101010]"
                   >
                     <MessageCircle size={14} />
                     ¿Dudas sobre el envío?

@@ -1,22 +1,16 @@
+import { ProductSection } from "@/components/home/CommercialHome";
+import { getStoreProducts } from "@/lib/storefront";
 import { getMediaUrl } from "@/lib/media-url";
 import {
   Check,
   PackageCheck,
-  ShieldCheck,
   Truck,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { ProductImageGallery } from "@/components/products/ProductImageGallery";
 import { ProductPurchasePanel } from "@/components/products/ProductPurchasePanel";
-import { Badge } from "@/components/ui/Badge";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { getPublishedProductBySlug } from "@/services/catalog";
 
@@ -75,272 +69,27 @@ export default async function ProductPage({
     notFound();
   }
 
-  const sizes = product.variants
-    .map((variant) => {
-      const measure =
-        variant.attributes.find(
-          (attribute) =>
-            attribute.name === "Medida",
-        );
-
-      return measure?.value ?? variant.name;
-    })
-    .filter(
-      (value, index, values) =>
-        value.length > 0 &&
-        values.indexOf(value) === index,
-    );
-
-  const features =
-    product.features.length > 0
-      ? product.features
-      : [
-        "Fabricación nacional",
-        "Materiales seleccionados",
-        "Diseñado para un descanso confortable",
-        "Disponible en distintas medidas",
-      ];
-
-  const specifications =
-    product.specifications.length > 0
-      ? product.specifications
-      : [
-        {
-          label: "Marca",
-          value:
-            product.brand ??
-            "Incal",
-        },
-        {
-          label: "Medidas disponibles",
-          value:
-            sizes.join(", ") ||
-            "Consultar disponibilidad",
-        },
-        {
-          label: "SKU",
-          value: firstVariant.sku,
-        },
-        {
-          label: "Garantía",
-          value:
-            product.warranty ??
-            "Consultar",
-        },
-      ];
-
-  const categoryName =
-    product.category?.name ??
-    "Productos";
-
-  const categoryHref =
-    product.category
-      ? `/categoria/${product.category.slug}`
-      : "/productos";
-
-  const description =
-    product.description ??
-    product.shortDescription ??
-    "Conoce los detalles de este producto.";
-
-  const manufacturingText =
-    product.manufacturingDays
-      ? `El plazo estimado de preparación o fabricación es de ${product.manufacturingDays} días hábiles.`
-      : "Los tiempos definitivos de preparación y entrega se informarán durante el proceso de compra.";
-
+  const categoryName = product.category?.name ?? "Productos";
+  const categoryHref = product.category ? `/categoria/${product.category.slug}` : "/productos";
+  const related = (await getStoreProducts()).filter(p => p.id !== product.id && p.type !== "CUSTOM_MATTRESS").sort((a,b) => Number(b.categories.some(c => c.category.id === product.category?.id)) - Number(a.categories.some(c => c.category.id === product.category?.id))).slice(0,8);
   return (
-    <main>
-      <section className="border-b border-slate-200 bg-slate-50 py-6">
-        <Container>
-          <Breadcrumb
-            items={[
-              {
-                label: "Inicio",
-                href: "/",
-              },
-              {
-                label: "Colchones",
-                href: "/productos",
-              },
-              {
-                label: categoryName,
-                href: categoryHref,
-              },
-              {
-                label: product.name,
-              },
-            ]}
-          />
-        </Container>
-      </section>
-
-      <section className="py-10 sm:py-14">
-        <Container>
-          <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
-            <div>
-              <div className="relative">
-                {firstVariant.compareAtPrice &&
-                  firstVariant.compareAtPrice >
-                  firstVariant.price && (
-                    <Badge
-                      variant="sale"
-                      className="absolute left-5 top-5 z-10"
-                    >
-                      Oferta
-                    </Badge>
-                  )}
-
-                <ProductImageGallery
-                  images={product.images}
-                  productName={product.name}
-                />
-              </div>
-            </div>
-
-            <div>
-              <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-accent-600">
-                {categoryName}
-              </p>
-
-              <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-brand-950 sm:text-5xl">
-                {product.name}
-              </h1>
-
-              <p className="mt-5 text-base leading-7 text-slate-600 sm:text-lg">
-                {description}
-              </p>
-              <ProductPurchasePanel
-                productId={product.id}
-                productName={product.name}
-                productHref={`/producto/${product.slug}`}
-                productImage={getMediaUrl(product.images[0]) ?? undefined}
-                variants={product.variants}
-                dimensioned
-              />
-
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                <Card
-                  variant="outlined"
-                  padding="sm"
-                >
-                  <div className="flex gap-3">
-                    <Truck className="mt-0.5 shrink-0 text-brand-950" />
-
-                    <div>
-                      <p className="font-bold text-brand-950">
-                        Despacho disponible
-                      </p>
-
-                      <p className="mt-1 text-sm leading-5 text-slate-600">
-                        Consulta cobertura y plazo
-                        según tu comuna.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card
-                  variant="outlined"
-                  padding="sm"
-                >
-                  <div className="flex gap-3">
-                    <ShieldCheck className="mt-0.5 shrink-0 text-brand-950" />
-
-                    <div>
-                      <p className="font-bold text-brand-950">
-                        Compra protegida
-                      </p>
-
-                      <p className="mt-1 text-sm leading-5 text-slate-600">
-                        Productos respaldados por
-                        garantía.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      <section className="border-t border-slate-200 bg-slate-50 py-12 sm:py-16">
-        <Container>
-          <div className="grid gap-8 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Características principales
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent>
-                <ul className="space-y-4">
-                  {features.map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex gap-3 text-slate-700"
-                    >
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                        <Check size={15} />
-                      </span>
-
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Especificaciones
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent>
-                <dl className="divide-y divide-slate-200">
-                  {specifications.map(
-                    (specification) => (
-                      <div
-                        key={specification.label}
-                        className="flex justify-between gap-6 py-4 first:pt-0 last:pb-0"
-                      >
-                        <dt className="text-sm font-semibold text-slate-500">
-                          {specification.label}
-                        </dt>
-
-                        <dd className="text-right text-sm font-bold text-brand-950">
-                          {specification.value}
-                        </dd>
-                      </div>
-                    ),
-                  )}
-                </dl>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="mt-8">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-accent-100 text-accent-700">
-                <PackageCheck size={27} />
-              </div>
-
-              <div>
-                <h2 className="text-xl font-extrabold text-brand-950">
-                  Preparación y despacho
-                </h2>
-
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                  {manufacturingText}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </Container>
-      </section>
+    <main className="bg-white text-[#101010]">
+      <section className="border-b border-[#e5dfd6] bg-[#F7F6F3] py-4"><Container><Breadcrumb items={[{label:"Inicio",href:"/"},{label:"Productos",href:"/productos"},{label:categoryName,href:categoryHref},{label:product.name}]}/></Container></section>
+      <section className="py-8 lg:py-14"><Container><div className="grid items-start gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+        <ProductImageGallery key={product.id} images={product.images} productName={product.name}/>
+        <div><p className="text-xs uppercase tracking-[.22em] text-[#927451]">{categoryName}</p><h1 className="mt-3 text-3xl font-medium tracking-tight sm:text-5xl">{product.name}</h1>
+        {product.brand && <p className="mt-3 text-sm text-neutral-600">{product.brand}</p>}
+        {product.shortDescription && <p className="mt-4 leading-7 text-neutral-600">{product.shortDescription}</p>}
+        <ProductPurchasePanel key={product.id} productId={product.id} productName={product.name} productHref={`/producto/${product.slug}`} productImage={getMediaUrl(product.images[0]) ?? undefined} variants={product.variants} dimensioned/>
+        <div className="mt-8 grid gap-4 border-y border-[#e5dfd6] py-5 sm:grid-cols-2"><div className="flex gap-3"><Truck size={22}/><div><p className="text-sm font-medium">Despacho a Chile</p><p className="text-xs text-neutral-600">Consulta cobertura y plazos.</p></div></div><div className="flex gap-3"><PackageCheck size={22}/><div><p className="text-sm font-medium">Retiro coordinado</p><p className="text-xs text-neutral-600">Retiro personal en Santiago.</p></div></div></div>
+        <div className="mt-5 divide-y divide-[#e5dfd6]">
+          {product.description && <details open className="py-4"><summary className="cursor-pointer font-medium">Descripción</summary><p className="mt-4 whitespace-pre-line text-sm leading-7 text-neutral-600">{product.description}</p></details>}
+          {product.features.length>0 && <details className="py-4"><summary className="cursor-pointer font-medium">Características</summary><ul className="mt-4 space-y-2 text-sm text-neutral-600">{product.features.map((f,i)=><li key={i} className="flex gap-2"><Check size={16}/>{f}</li>)}</ul></details>}
+          {product.specifications.length>0 && <details className="py-4"><summary className="cursor-pointer font-medium">Especificaciones</summary><dl className="mt-4 divide-y divide-[#e5dfd6]">{product.specifications.map((s,i)=><div key={i} className="flex justify-between gap-4 py-3 text-sm"><dt className="text-neutral-600">{s.label}</dt><dd className="text-right">{s.value}</dd></div>)}</dl></details>}
+          <details className="py-4"><summary className="cursor-pointer font-medium">Preparación y entrega</summary><p className="mt-4 text-sm leading-6 text-neutral-600">{product.manufacturingDays ? `Preparación estimada: ${product.manufacturingDays} días hábiles.` : "Consulta los plazos de preparación y entrega según tu comuna."}</p></details>
+          {product.warranty && <details className="py-4"><summary className="cursor-pointer font-medium">Garantía</summary><p className="mt-4 text-sm text-neutral-600">{product.warranty}</p></details>}
+        </div></div></div></Container></section>
+      <ProductSection products={related} title="También te puede interesar" kicker="Completa tu selección" muted/>
     </main>
   );
 }

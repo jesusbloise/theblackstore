@@ -54,14 +54,14 @@ export function SectionTitle({
       >
         <div className="max-w-3xl">
           {eyebrow && (
-            <p className="mb-3 text-sm font-extrabold uppercase tracking-[0.18em] text-accent-600">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-accent-600">
               {eyebrow}
             </p>
           )}
 
           <h2
             className={[
-              "font-extrabold tracking-tight text-brand-950",
+              "font-semibold tracking-tight text-brand-950",
               titleSizeClasses[size],
             ].join(" ")}
           >
@@ -69,7 +69,7 @@ export function SectionTitle({
           </h2>
 
           {description && (
-            <div className="mt-4 text-base leading-7 text-slate-600 sm:text-lg">
+            <div className="mt-4 text-base leading-7 text-[#666666] sm:text-lg">
               {description}
             </div>
           )}

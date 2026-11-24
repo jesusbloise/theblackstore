@@ -73,8 +73,8 @@ function CheckoutStepper() {
                 step.completed
                   ? "border-emerald-600 bg-emerald-600 text-white"
                   : step.active
-                    ? "border-[#1B3A6B] bg-[#1B3A6B] text-white"
-                    : "border-slate-200 bg-slate-50 text-slate-400",
+                    ? "border-[#101010] bg-[#101010] text-white"
+                    : "border-[#e8e5df] bg-brand-50 text-neutral-500",
               ].join(" ")}
             >
               {step.completed ? <Check size={14} /> : step.number}
@@ -84,10 +84,10 @@ function CheckoutStepper() {
               className={[
                 "hidden text-[13px] sm:block",
                 step.active
-                  ? "font-semibold text-slate-900"
+                  ? "font-semibold text-brand-950"
                   : step.completed
                     ? "font-medium text-emerald-600"
-                    : "font-normal text-slate-400",
+                    : "font-normal text-neutral-500",
               ].join(" ")}
             >
               {step.label}
@@ -98,7 +98,7 @@ function CheckoutStepper() {
             <div
               className={[
                 "mx-3 h-0.5 flex-1",
-                step.completed ? "bg-emerald-600" : "bg-slate-200",
+                step.completed ? "bg-emerald-600" : "bg-brand-200",
               ].join(" ")}
             />
           )}
@@ -128,7 +128,7 @@ function FormField({
   return (
     <label className="block">
       {label && (
-        <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">
+        <span className="mb-1.5 block text-[13px] font-semibold text-neutral-700">
           {label}
 
           {required && <span className="ml-1 text-red-500">*</span>}
@@ -141,7 +141,7 @@ function FormField({
         required={required}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="h-11 w-full rounded-[9px] border border-slate-300 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/10"
+        className="h-11 w-full rounded-sm border border-brand-200 bg-white px-3.5 text-sm text-brand-950 outline-none transition placeholder:text-neutral-500 focus:border-[#101010] focus:ring-2 focus:ring-[#101010]/10"
       />
     </label>
   );
@@ -168,10 +168,10 @@ function PaymentOption({
     <label
       htmlFor={id}
       className={[
-        "flex cursor-pointer items-center gap-3 rounded-[10px] border-[1.5px] px-4 py-3 transition",
+        "flex cursor-pointer items-center gap-3 rounded-sm border-[1.5px] px-4 py-3 transition",
         selected
-          ? "border-blue-600 bg-blue-50"
-          : "border-slate-200 bg-white hover:border-slate-300",
+          ? "border-accent-400 bg-accent-50"
+          : "border-[#e8e5df] bg-white hover:border-brand-200",
       ].join(" ")}
     >
       <input
@@ -181,26 +181,26 @@ function PaymentOption({
         value={id}
         checked={selected}
         onChange={onSelect}
-        className="size-4 shrink-0 accent-blue-600"
+        className="size-4 shrink-0 accent-brand-950"
       />
 
       <span
         className={[
-          "flex size-9 shrink-0 items-center justify-center rounded-lg",
+          "flex size-9 shrink-0 items-center justify-center rounded-md",
           selected
-            ? "bg-white text-blue-700"
-            : "bg-slate-100 text-slate-500",
+            ? "bg-white text-brand-700"
+            : "bg-brand-100 text-neutral-600",
         ].join(" ")}
       >
         {icon}
       </span>
 
       <span className="min-w-0">
-        <span className="block text-sm font-semibold text-slate-900">
+        <span className="block text-sm font-semibold text-brand-950">
           {label}
         </span>
 
-        <span className="mt-0.5 block text-xs text-slate-500">
+        <span className="mt-0.5 block text-xs text-neutral-600">
           {description}
         </span>
       </span>
@@ -226,6 +226,9 @@ export default function CheckoutPage() {
   const [submitted, setSubmitted] =
     useState(false);
 
+  const [validating, setValidating] = useState(false);
+  const [validationError, setValidationError] = useState("");
+
   const isPickup =
     deliveryMethod === "pickup";
 
@@ -240,31 +243,33 @@ export default function CheckoutPage() {
   const total =
     subtotal + shippingPrice;
 
-  function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    setSubmitted(true);
-
-    /*
-     * En el próximo paso conectaremos aquí:
-     *
-     * 1. Creación o recuperación del carrito Medusa.
-     * 2. Datos del cliente.
-     * 3. Dirección de despacho.
-     * 4. Método de entrega.
-     * 5. Sesión de pago Webpay.
-     *
-     * Por ahora no se simula un pago ni se vacía el carrito.
-     */
+    if (validating) return;
+    setValidating(true);
+    setSubmitted(false);
+    setValidationError("");
+    try {
+      const response = await fetch("/api/cart/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: items.map(({ id, variantId, quantity, price }) => ({ id, variantId, quantity, price })) }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No se pudo validar el carrito.");
+      setSubmitted(true);
+    } catch (error) {
+      setValidationError(error instanceof Error ? error.message : "No se pudo validar el carrito.");
+    } finally {
+      setValidating(false);
+    }
   }
 
   if (!isHydrated) {
     return (
-      <main className="min-h-[70vh] bg-[#F8FAFC] py-8">
+      <main className="min-h-[70vh] bg-[#F7F6F3] py-8">
         <Container>
-          <div className="mx-auto h-96 max-w-[1000px] animate-pulse rounded-2xl bg-white" />
+          <div className="mx-auto h-96 max-w-[1120px] animate-pulse rounded-2xl bg-white" />
         </Container>
       </main>
     );
@@ -272,26 +277,26 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <main className="min-h-[70vh] bg-[#F8FAFC] py-10">
+      <main className="min-h-[70vh] bg-[#F7F6F3] py-10">
         <Container>
-          <section className="mx-auto max-w-[700px] rounded-[14px] border border-slate-200 bg-white px-6 py-14 text-center">
-            <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+          <section className="mx-auto max-w-[700px] rounded-md border border-[#e8e5df] bg-white px-6 py-14 text-center">
+            <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-brand-100 text-neutral-500">
               <PackageOpen size={29} />
             </span>
 
-            <h1 className="mt-5 text-2xl font-extrabold text-slate-900">
+            <h1 className="mt-5 text-2xl font-extrabold text-brand-950">
               No tienes productos para pagar
             </h1>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-neutral-600">
               Primero agrega productos a tu carrito.
             </p>
 
             <Link
-              href="/colchones"
-              className="mt-6 inline-flex items-center gap-2 rounded-[10px] bg-[#1B3A6B] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+              href="/productos"
+              className="mt-6 inline-flex items-center gap-2 rounded-sm bg-[#101010] px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800"
             >
-              Ver colchones
+              Ver productos
               <ChevronRight size={17} />
             </Link>
           </section>
@@ -301,30 +306,31 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-[70vh] bg-[#F8FAFC] py-6 sm:py-8">
+    <main className="min-h-[70vh] bg-[#F7F6F3] py-8 sm:py-12">
       <Container>
-        <div className="mx-auto max-w-[1000px]">
+        <div className="mx-auto max-w-[1120px]">
           <CheckoutStepper />
+          <h1 className="mb-6 text-2xl font-semibold tracking-tight text-brand-950 sm:text-3xl">Finalizar compra</h1>
 
           <Link
             href="/carrito"
-            className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-[#1B3A6B]"
+            className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-neutral-600 transition hover:text-[#101010]"
           >
             <ArrowLeft size={15} />
             Volver al carrito
           </Link>
 
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             <form
               id="checkout-form"
               className="space-y-4"
               onSubmit={handleSubmit}
             >
               {/* Datos de contacto */}
-              <section className="rounded-[14px] border border-slate-200 bg-white p-5">
-                <h1 className="text-[13px] font-bold uppercase tracking-[0.05em] text-slate-500">
+              <section className="rounded-md border border-[#e8e5df] bg-white p-5">
+                <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-neutral-600">
                   Datos de contacto
-                </h1>
+                </h2>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
@@ -356,17 +362,17 @@ export default function CheckoutPage() {
 
               {/* Dirección o retiro */}
               {isPickup ? (
-                <section className="flex items-start gap-3 rounded-[14px] border-[1.5px] border-emerald-200 bg-emerald-50 p-4">
+                <section className="flex items-start gap-3 rounded-md border-[1.5px] border-emerald-200 bg-emerald-50 p-4">
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-emerald-700">
                     <Building2 size={19} />
                   </span>
 
                   <div>
-                    <h2 className="text-sm font-bold text-slate-900">
+                    <h2 className="text-sm font-bold text-brand-950">
                       Retiro en bodega
                     </h2>
 
-                    <p className="mt-1 text-[13px] leading-5 text-slate-600">
+                    <p className="mt-1 text-[13px] leading-5 text-neutral-600">
                       No necesitas ingresar una dirección. Te
                       avisaremos por WhatsApp cuando tu pedido esté
                       listo para retirar.
@@ -374,8 +380,8 @@ export default function CheckoutPage() {
                   </div>
                 </section>
               ) : (
-                <section className="rounded-[14px] border border-slate-200 bg-white p-5">
-                  <h2 className="text-[13px] font-bold uppercase tracking-[0.05em] text-slate-500">
+                <section className="rounded-md border border-[#e8e5df] bg-white p-5">
+                  <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-neutral-600">
                     Dirección de entrega
                   </h2>
 
@@ -405,7 +411,7 @@ export default function CheckoutPage() {
                             ? ""
                             : "Región Metropolitana"
                         }
-                        className="h-11 w-full rounded-[9px] border border-slate-300 bg-white px-3.5 text-sm text-slate-900 outline-none transition focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/10"
+                        className="h-11 w-full rounded-sm border border-brand-200 bg-white px-3.5 text-sm text-brand-950 outline-none transition focus:border-[#101010] focus:ring-2 focus:ring-[#101010]/10"
                       >
                         <option value="" disabled>
                           Región
@@ -481,8 +487,8 @@ export default function CheckoutPage() {
               )}
 
               {/* Métodos de pago */}
-              <section className="rounded-[14px] border border-slate-200 bg-white p-5">
-                <h2 className="text-[13px] font-bold uppercase tracking-[0.05em] text-slate-500">
+              <section className="rounded-md border border-[#e8e5df] bg-white p-5">
+                <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-neutral-600">
                   Medio de pago
                 </h2>
 
@@ -519,7 +525,7 @@ export default function CheckoutPage() {
                   <PaymentOption
                     id="transferencia"
                     label="Transferencia bancaria"
-                    description="Pago directo a la cuenta de Incal"
+                    description="Pago directo a la cuenta de The Black Store"
                     selected={
                       paymentMethod ===
                       "transferencia"
@@ -537,10 +543,10 @@ export default function CheckoutPage() {
               {/* Factura */}
               <section
                 className={[
-                  "rounded-[14px] border-[1.5px] bg-white px-5 py-4 transition",
+                  "rounded-md border-[1.5px] bg-white px-5 py-4 transition",
                   needsInvoice
-                    ? "border-blue-600"
-                    : "border-slate-200",
+                    ? "border-accent-400"
+                    : "border-[#e8e5df]",
                 ].join(" ")}
               >
                 <label className="flex cursor-pointer items-start gap-3">
@@ -552,16 +558,16 @@ export default function CheckoutPage() {
                         event.target.checked,
                       )
                     }
-                    className="mt-0.5 size-4 shrink-0 accent-blue-600"
+                    className="mt-0.5 size-4 shrink-0 accent-brand-950"
                   />
 
                   <span>
-                    <span className="block text-[13px] font-medium text-slate-900">
+                    <span className="block text-[13px] font-medium text-brand-950">
                       ¿Necesitas factura?
                     </span>
 
                     {!needsInvoice && (
-                      <span className="mt-0.5 block text-xs text-slate-400">
+                      <span className="mt-0.5 block text-xs text-neutral-500">
                         Solo si requieres documento tributario
                       </span>
                     )}
@@ -569,7 +575,7 @@ export default function CheckoutPage() {
                 </label>
 
                 {needsInvoice && (
-                  <div className="mt-4 space-y-3 border-t border-blue-100 pt-4">
+                  <div className="mt-4 space-y-3 border-t border-accent-200 pt-4">
                     <FormField
                       name="companyRut"
                       placeholder="RUT empresa, ejemplo: 76.123.456-7"
@@ -591,29 +597,29 @@ export default function CheckoutPage() {
                 )}
               </section>
 
+              {validationError && <p role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-800">{validationError}</p>}
               {submitted && (
                 <div
                   role="status"
-                  className="rounded-[10px] border border-blue-200 bg-blue-50 px-4 py-3 text-[13px] leading-5 text-blue-900"
+                  className="rounded-sm border border-accent-300 bg-accent-50 px-4 py-3 text-[13px] leading-5 text-brand-950"
                 >
-                  El formulario está listo. La conexión real con
-                  Medusa y el proveedor de pago se realizará en el
-                  siguiente paso del proyecto.
+                  Carrito validado. Todavía no se ha creado un pedido ni realizado un cobro.
                 </div>
               )}
 
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#1B3A6B] px-6 py-[13px] text-[15px] font-semibold text-white transition hover:opacity-90"
+                disabled={validating}
+                className="flex w-full items-center justify-center gap-2 rounded-sm bg-[#101010] px-6 py-[13px] text-[15px] font-semibold text-white transition hover:bg-brand-800"
               >
-                Confirmar y pagar
+                {validating ? "Validando…" : "Validar carrito"}
                 <ChevronRight size={17} />
               </button>
             </form>
 
             {/* Resumen */}
-            <aside className="rounded-[14px] border border-slate-200 bg-white p-[18px] lg:sticky lg:top-24">
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.05em] text-slate-500">
+            <aside className="rounded-md border border-[#e8e5df] bg-white p-[18px] lg:sticky lg:top-24">
+              <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-neutral-600">
                 Resumen
               </h2>
 
@@ -621,14 +627,14 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <div
                     key={item.cartItemId}
-                    className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0"
+                    className="flex items-start justify-between gap-3 border-b border-brand-100 pb-3 last:border-0 last:pb-0"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-medium leading-[1.35] text-slate-900">
+                      <p className="text-[13px] font-medium leading-[1.35] text-brand-950">
                         {item.name}
                       </p>
 
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-neutral-600">
                         x{item.quantity}
 
                         {item.subtitle
@@ -637,7 +643,7 @@ export default function CheckoutPage() {
                       </p>
                     </div>
 
-                    <p className="shrink-0 text-[13px] font-semibold text-slate-900">
+                    <p className="shrink-0 text-[13px] font-semibold text-brand-950">
                       {formatCLP(
                         item.price *
                           item.quantity,
@@ -647,21 +653,21 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <div className="my-4 h-px bg-slate-200" />
+              <div className="my-4 h-px bg-brand-200" />
 
               <div className="space-y-2">
                 <div className="flex justify-between gap-4 text-sm">
-                  <span className="text-slate-500">
+                  <span className="text-neutral-600">
                     Subtotal
                   </span>
 
-                  <span className="text-slate-900">
+                  <span className="text-brand-950">
                     {formatCLP(subtotal)}
                   </span>
                 </div>
 
                 <div className="flex justify-between gap-4 text-sm">
-                  <span className="text-slate-500">
+                  <span className="text-neutral-600">
                     Envío
                   </span>
 
@@ -670,7 +676,7 @@ export default function CheckoutPage() {
                       "text-right",
                       isPickup
                         ? "font-semibold text-emerald-600"
-                        : "text-slate-900",
+                        : "text-brand-950",
                     ].join(" ")}
                   >
                     {isPickup
@@ -684,9 +690,9 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="my-4 h-px bg-slate-200" />
+              <div className="my-4 h-px bg-brand-200" />
 
-              <div className="flex items-center justify-between gap-4 text-[17px] font-bold text-slate-900">
+              <div className="flex items-center justify-between gap-4 text-[17px] font-bold text-brand-950">
                 <span>Total</span>
 
                 <span>
@@ -698,14 +704,15 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
+                disabled={validating}
                 form="checkout-form"
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#1B3A6B] px-5 py-[13px] text-[15px] font-semibold text-white transition hover:opacity-90 lg:hidden"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-sm bg-[#101010] px-5 py-[13px] text-[15px] font-semibold text-white transition hover:bg-brand-800 lg:hidden"
               >
-                Confirmar y pagar
+                {validating ? "Validando…" : "Validar carrito"}
                 <ChevronRight size={17} />
               </button>
 
-              <div className="mt-4 flex items-start gap-2 rounded-lg bg-slate-50 p-3">
+              <div className="mt-4 flex items-start gap-2 rounded-md bg-brand-50 p-3">
                 {isPickup ? (
                   <Truck
                     size={17}
@@ -714,11 +721,11 @@ export default function CheckoutPage() {
                 ) : (
                   <MapPin
                     size={17}
-                    className="mt-0.5 shrink-0 text-blue-600"
+                    className="mt-0.5 shrink-0 text-brand-700"
                   />
                 )}
 
-                <p className="text-[11px] leading-5 text-slate-500">
+                <p className="text-[11px] leading-5 text-neutral-600">
                   {isPickup
                     ? "Te avisaremos cuando tu pedido esté listo para retirar."
                     : isRegion
@@ -727,13 +734,13 @@ export default function CheckoutPage() {
                 </p>
               </div>
 
-              <div className="mt-3 flex items-start gap-2 rounded-lg bg-slate-50 p-3">
+              <div className="mt-3 flex items-start gap-2 rounded-md bg-brand-50 p-3">
                 <ShieldCheck
                   size={17}
                   className="mt-0.5 shrink-0 text-emerald-600"
                 />
 
-                <p className="text-[11px] leading-5 text-slate-500">
+                <p className="text-[11px] leading-5 text-neutral-600">
                   Tus datos serán utilizados únicamente para
                   procesar y entregar tu compra.
                 </p>

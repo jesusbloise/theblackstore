@@ -42,7 +42,7 @@ export function Price({
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <span
-        className={`${sizeClasses[size].current} font-black tracking-tight text-slate-950`}
+        className={`${sizeClasses[size].current} font-semibold tracking-tight text-[#101010]`}
       >
         {formatCurrency(price)}
       </span>
@@ -50,12 +50,12 @@ export function Price({
       {hasDiscount && (
         <>
           <span
-            className={`${sizeClasses[size].original} text-slate-500 line-through`}
+            className={`${sizeClasses[size].original} text-[#777] line-through`}
           >
             {formatCurrency(originalPrice)}
           </span>
 
-          <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
+          <span className="bg-[#F0E9DD] px-2 py-1 text-xs font-medium text-[#59452D]">
             -{discountPercentage}%
           </span>
         </>
