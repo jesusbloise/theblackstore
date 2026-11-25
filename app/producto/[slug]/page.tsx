@@ -93,7 +93,15 @@ export default async function ProductPage({
         <div><p className="text-xs uppercase tracking-[.22em] text-[#927451]">{categoryName}</p><h1 className="mt-3 text-3xl font-medium tracking-tight sm:text-5xl">{product.name}</h1>
         {product.brand && <p className="mt-3 text-sm text-neutral-600">{product.brand}</p>}
         {product.shortDescription && <p className="mt-4 leading-7 text-neutral-600">{product.shortDescription}</p>}
-        <ProductPurchasePanel key={product.id} productId={product.id} productName={product.name} productHref={`/producto/${product.slug}`} productImage={getMediaUrl(product.images[0]) ?? undefined} variants={product.variants} dimensioned/>
+       <ProductPurchasePanel
+  key={product.id}
+  productId={product.id}
+  productName={product.name}
+  productHref={`/producto/${product.slug}`}
+  productImage={getMediaUrl(product.images[0]) ?? undefined}
+  variants={product.variants}
+  dimensioned={false}
+/>
         <div className="mt-8 grid gap-4 border-y border-[#e5dfd6] py-5 sm:grid-cols-2"><div className="flex gap-3"><Truck size={22}/><div><p className="text-sm font-medium">Despacho a Chile</p><p className="text-xs text-neutral-600">Consulta cobertura y plazos.</p></div></div><div className="flex gap-3"><PackageCheck size={22}/><div><p className="text-sm font-medium">Retiro coordinado</p><p className="text-xs text-neutral-600">Retiro personal en Santiago.</p></div></div></div>
         <div className="mt-5 divide-y divide-[#e5dfd6]">
           {product.description && <details open className="py-4"><summary className="cursor-pointer font-medium">Descripción</summary><p className="mt-4 whitespace-pre-line text-sm leading-7 text-neutral-600">{product.description}</p></details>}

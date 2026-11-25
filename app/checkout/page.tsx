@@ -14,7 +14,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import { useCart } from "@/components/cart/CartProvider";
 import { Container } from "@/components/ui/Container";
@@ -25,6 +25,15 @@ type PaymentMethod =
   | "webpay"
   | "mercado-pago"
   | "transferencia";
+
+type OrderConfirmation = {
+  orderNumber: string;
+  status: string;
+  paymentStatus: string;
+  subtotal: number;
+  shippingAmount: number;
+  total: number;
+};
 
 function formatCLP(value: number) {
   return new Intl.NumberFormat("es-CL", {
@@ -215,6 +224,7 @@ export default function CheckoutPage() {
     deliveryMethod,
     deliveryZone,
     isHydrated,
+    clearCart,
   } = useCart();
 
   const [paymentMethod, setPaymentMethod] =
@@ -223,9 +233,15 @@ export default function CheckoutPage() {
   const [needsInvoice, setNeedsInvoice] =
     useState(false);
 
-  const [submitted, setSubmitted] =
-    useState(false);
+  const [confirmation, setConfirmation] =
+    useState<OrderConfirmation | null>(null);
 
+  const pendingRequest = useRef<{
+    key: string;
+    payload: string;
+  } | null>(null);
+
+  const submitting = useRef(false);
   const [validating, setValidating] = useState(false);
   const [validationError, setValidationError] = useState("");
 
@@ -245,22 +261,122 @@ export default function CheckoutPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (validating) return;
-    setValidating(true);
-    setSubmitted(false);
+
+    if (submitting.current) return;
+
     setValidationError("");
+
+    if (needsInvoice) {
+      setValidationError("La facturación todavía no está habilitada.");
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const field = (name: string) =>
+      String(form.get(name) ?? "").trim();
+
+    if (!isPickup && (
+      isRegion ||
+      field("region") !== "Región Metropolitana"
+    )) {
+      setValidationError("El despacho regional requiere cotización previa.");
+      return;
+    }
+
+    if (items.some(item => !item.variantId || item.dimensioned)) {
+      setValidationError("El carrito contiene productos que requieren cotización.");
+      return;
+    }
+
+    const payload = {
+      customer: {
+        firstName: field("firstName"),
+        lastName: field("lastName"),
+        email: field("email"),
+        phone: field("phone"),
+      },
+      deliveryMethod,
+      paymentMethod,
+      ...(!isPickup && {
+        address: {
+          street: field("street"),
+          streetNumber: field("streetNumber"),
+          commune: field("commune"),
+          city: field("city"),
+          region: field("region"),
+          apartment: field("apartment") || undefined,
+        },
+      }),
+      items: items.map(({ id, variantId, quantity, price }) => ({
+        id,
+        variantId,
+        quantity,
+        price,
+      })),
+    };
+
+    const serialized = JSON.stringify(payload);
+
+    if (
+      pendingRequest.current &&
+      pendingRequest.current.payload !== serialized
+    ) {
+      setValidationError(
+        "Existe un intento de compra anterior. Reintenta con los mismos datos para evitar pedidos duplicados."
+      );
+      return;
+    }
+
+    submitting.current = true;
+    setValidating(true);
+
     try {
-      const response = await fetch("/api/cart/validate", {
+      if (!pendingRequest.current) {
+        pendingRequest.current = {
+          key: crypto.randomUUID(),
+          payload: serialized,
+        };
+      }
+
+      const response = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: items.map(({ id, variantId, quantity, price }) => ({ id, variantId, quantity, price })) }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...payload,
+          idempotencyKey: pendingRequest.current.key,
+        }),
       });
+
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "No se pudo validar el carrito.");
-      setSubmitted(true);
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          pendingRequest.current = null;
+        }
+
+        throw new Error(
+          result.error || "No se pudo crear el pedido."
+        );
+      }
+
+      if (typeof result.orderNumber !== "string") {
+        throw new Error("No se pudo confirmar el pedido.");
+      }
+
+      setConfirmation(result);
+      pendingRequest.current = null;
+      clearCart();
+
     } catch (error) {
-      setValidationError(error instanceof Error ? error.message : "No se pudo validar el carrito.");
+      setValidationError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo crear el pedido."
+      );
     } finally {
+      submitting.current = false;
       setValidating(false);
     }
   }
@@ -274,7 +390,72 @@ export default function CheckoutPage() {
       </main>
     );
   }
+if (confirmation) {
+  return (
+    <main className="min-h-[70vh] bg-[#F7F6F3] py-12">
+      <Container>
+        <section className="mx-auto max-w-[700px] rounded-md border border-[#e8e5df] bg-white px-6 py-12 text-center">
 
+          <span className="mx-auto flex size-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+            <Check size={38} />
+          </span>
+
+          <h1 className="mt-6 text-3xl font-bold text-brand-950">
+            ¡Pedido recibido!
+          </h1>
+
+          <p className="mt-3 text-sm text-neutral-600">
+            Tu pedido ha sido registrado correctamente.
+          </p>
+
+          <div className="mt-6 rounded-md bg-brand-50 p-5">
+            <p className="text-xs uppercase tracking-widest text-neutral-500">
+              Número de pedido
+            </p>
+
+            <p className="mt-2 break-all text-sm font-bold text-brand-950">
+              {confirmation.orderNumber}
+            </p>
+          </div>
+
+          <div className="mt-6 space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{formatCLP(confirmation.subtotal)}</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span>Despacho</span>
+              <span>
+                {confirmation.shippingAmount === 0
+                  ? "Gratis"
+                  : formatCLP(confirmation.shippingAmount)}
+              </span>
+            </div>
+
+            <div className="flex justify-between border-t border-brand-200 pt-4 text-lg font-bold">
+              <span>Total</span>
+              <span>{formatCLP(confirmation.total)}</span>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-md bg-amber-50 p-4 text-sm text-amber-800">
+            Pago pendiente. Todavía no se ha realizado ningún cobro.
+          </div>
+
+          <Link
+            href="/productos"
+            className="mt-8 inline-flex items-center gap-2 rounded-sm bg-[#101010] px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-800"
+          >
+            Seguir comprando
+            <ChevronRight size={17} />
+          </Link>
+
+        </section>
+      </Container>
+    </main>
+  );
+}
   if (items.length === 0) {
     return (
       <main className="min-h-[70vh] bg-[#F7F6F3] py-10">
@@ -333,14 +514,19 @@ export default function CheckoutPage() {
                 </h2>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <FormField
-                      name="fullName"
-                      placeholder="Nombre completo"
-                      required
-                      autoComplete="name"
-                    />
-                  </div>
+                  <FormField
+  name="firstName"
+  placeholder="Nombre"
+  required
+  autoComplete="given-name"
+/>
+
+<FormField
+  name="lastName"
+  placeholder="Apellido"
+  required
+  autoComplete="family-name"
+/>
 
                   <FormField
                     name="email"
@@ -386,14 +572,30 @@ export default function CheckoutPage() {
                   </h2>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div className="sm:col-span-2">
-                      <FormField
-                        name="address"
-                        placeholder="Calle y número"
-                        required
-                        autoComplete="street-address"
-                      />
-                    </div>
+                    <FormField
+  name="street"
+  placeholder="Calle"
+  required
+  autoComplete="address-line1"
+/>
+
+<FormField
+  name="streetNumber"
+  placeholder="Número"
+  required
+/>
+
+<FormField
+  name="apartment"
+  placeholder="Departamento o casa (opcional)"
+  autoComplete="address-line2"
+/>
+
+<FormField
+  name="city"
+  placeholder="Ciudad"
+  required
+/>
 
                     <FormField
                       name="commune"
@@ -597,22 +799,20 @@ export default function CheckoutPage() {
                 )}
               </section>
 
-              {validationError && <p role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-800">{validationError}</p>}
-              {submitted && (
-                <div
-                  role="status"
-                  className="rounded-sm border border-accent-300 bg-accent-50 px-4 py-3 text-[13px] leading-5 text-brand-950"
-                >
-                  Carrito validado. Todavía no se ha creado un pedido ni realizado un cobro.
-                </div>
-              )}
-
+           {validationError && (
+  <p
+    role="alert"
+    className="rounded-md bg-red-50 p-4 text-sm text-red-800"
+  >
+    {validationError}
+  </p>
+)}
               <button
                 type="submit"
                 disabled={validating}
                 className="flex w-full items-center justify-center gap-2 rounded-sm bg-[#101010] px-6 py-[13px] text-[15px] font-semibold text-white transition hover:bg-brand-800"
               >
-                {validating ? "Validando…" : "Validar carrito"}
+                {validating ? "Procesando pedido…" : "Confirmar pedido"}
                 <ChevronRight size={17} />
               </button>
             </form>
@@ -646,7 +846,7 @@ export default function CheckoutPage() {
                     <p className="shrink-0 text-[13px] font-semibold text-brand-950">
                       {formatCLP(
                         item.price *
-                          item.quantity,
+                        item.quantity,
                       )}
                     </p>
                   </div>
@@ -684,8 +884,8 @@ export default function CheckoutPage() {
                       : isRegion
                         ? "A cotizar"
                         : formatCLP(
-                            SANTIAGO_SHIPPING_PRICE,
-                          )}
+                          SANTIAGO_SHIPPING_PRICE,
+                        )}
                   </span>
                 </div>
               </div>
@@ -708,7 +908,7 @@ export default function CheckoutPage() {
                 form="checkout-form"
                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-sm bg-[#101010] px-5 py-[13px] text-[15px] font-semibold text-white transition hover:bg-brand-800 lg:hidden"
               >
-                {validating ? "Validando…" : "Validar carrito"}
+               {validating ? "Procesando pedido…" : "Confirmar pedido"}
                 <ChevronRight size={17} />
               </button>
 

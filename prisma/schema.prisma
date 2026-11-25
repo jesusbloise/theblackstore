@@ -60,6 +60,7 @@ model Product {
   features       ProductFeature[]
   specifications ProductSpecification[]
   customMattress CustomMattressConfig?
+  orderItems     OrderItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,6 +153,7 @@ model ProductVariant {
 
   product    Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
   attributes VariantAttribute[]
+  orderItems OrderItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -193,6 +195,7 @@ model CustomMattressConfig {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 enum AdminRole {
   SUPER_ADMIN
   ADMIN
@@ -226,20 +229,191 @@ model AdminSession {
   @@index([userId])
   @@index([expiresAt])
 }
+
 model Banner {
-  id String @id @default(cuid())
-  title String
-  subtitle String @default("")
-  imageKey String
+  id             String    @id @default(cuid())
+  title          String
+  subtitle       String    @default("")
+  imageKey       String
   mobileImageKey String?
-  buttonText String @default("Explorar productos")
-  href String @default("/productos")
-  alignment String @default("left")
-  sortOrder Int @default(0)
-  isActive Boolean @default(false)
-  startsAt DateTime?
-  endsAt DateTime?
+  buttonText     String    @default("Explorar productos")
+  href           String    @default("/productos")
+  alignment      String    @default("left")
+  sortOrder      Int       @default(0)
+  isActive       Boolean   @default(false)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  WEBPAY
+  MERCADO_PAGO
+  BANK_TRANSFER
+}
+
+enum DeliveryMethod {
+  SHIPPING
+  PICKUP
+}
+
+model Customer {
+  id        String  @id @default(cuid())
+  email     String  @unique
+  firstName String
+  lastName  String
+  phone     String?
+
+  orders Order[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  @@index([isActive, sortOrder])
+}
+
+model Order {
+  id             String @id @default(cuid())
+  orderNumber    String @unique
+  idempotencyKey String @unique
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  customerName  String
+  customerEmail String
+  customerPhone String?
+
+  status         OrderStatus    @default(PENDING)
+  paymentStatus  PaymentStatus  @default(PENDING)
+  deliveryMethod DeliveryMethod
+
+  currency       String @default("CLP")
+  subtotal       Int
+  discountAmount Int    @default(0)
+  shippingAmount Int    @default(0)
+  total          Int
+
+  notes String?
+
+  items         OrderItem[]
+  address       OrderAddress?
+  payments      Payment[]
+  statusHistory OrderStatusHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status, createdAt])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  variantId String
+
+  product Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  productName String
+  variantName String
+  sku         String
+  imageUrl    String?
+
+  quantity  Int
+  unitPrice Int
+  subtotal  Int
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([variantId])
+}
+
+model OrderAddress {
+  id      String @id @default(cuid())
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  recipientName String
+  phone         String?
+  street        String
+  streetNumber  String
+  apartment     String?
+  commune       String
+  city          String
+  region        String
+  country       String  @default("CL")
+  postalCode    String?
+  reference     String?
+
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  method PaymentMethod
+  status PaymentStatus @default(PENDING)
+
+  amount   Int
+  currency String @default("CLP")
+
+  providerTransactionId String?
+  providerReference     String?
+  failureReason         String?
+
+  paidAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([method, providerTransactionId])
+  @@index([orderId])
+  @@index([status])
+}
+
+model OrderStatusHistory {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  previousStatus OrderStatus?
+  newStatus      OrderStatus
+  notes          String?
+  changedBy      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
 }

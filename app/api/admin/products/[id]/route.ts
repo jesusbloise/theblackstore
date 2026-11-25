@@ -242,3 +242,259 @@ export async function PATCH(
     );
   }
 }
+export async function POST(
+  request: NextRequest,
+  { params }: RouteContext,
+) {
+  const unauthorized = await requireAdminApi();
+
+  if (unauthorized) {
+    return unauthorized;
+  }
+
+  try {
+    const { id: productId } = await params;
+
+    const validation = z.object({
+      action: z.enum(["archive", "restore"]),
+    }).safeParse(
+      await request.json().catch(() => null),
+    );
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "Acción no válida.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const isArchive =
+  validation.data.action === "archive";
+
+if (!isArchive) {
+  const sellableVariant = await prisma.productVariant.findFirst({
+    where: {
+      productId,
+      isActive: true,
+      price: {
+        gt: 0,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!sellableVariant) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "No se puede publicar el producto sin una variante activa con precio válido.",
+      },
+      { status: 400 },
+    );
+  }
+}
+
+    const result = await prisma.product.updateMany({
+      where: {
+        id: productId,
+        status: isArchive
+          ? { not: ProductStatus.ARCHIVED }
+          : ProductStatus.ARCHIVED,
+      },
+      data: {
+  status: isArchive
+    ? ProductStatus.ARCHIVED
+    : ProductStatus.PUBLISHED,
+},
+    });
+
+    if (result.count === 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "El producto no existe o su estado no permite esta acción.",
+        },
+        { status: 409 },
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+     message: isArchive
+  ? "Producto archivado correctamente."
+  : "Producto recuperado y publicado correctamente.",
+    });
+  } catch (error) {
+    console.error("Error cambiando estado del producto:", error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "No fue posible cambiar el estado del producto.",
+      },
+      { status: 500 },
+    );
+  }
+}
+export async function DELETE(
+  request: NextRequest,
+  { params }: RouteContext,
+) {
+  const unauthorized = await requireAdminApi();
+
+  if (unauthorized) {
+    return unauthorized;
+  }
+
+  try {
+    const { id: productId } = await params;
+
+    const result = await prisma.$transaction(
+      async (transaction) => {
+        const product = await transaction.product.findUnique({
+          where: {
+            id: productId,
+          },
+          select: {
+            id: true,
+            status: true,
+          },
+        });
+
+        if (!product) {
+          return "NOT_FOUND";
+        }
+
+        if (product.status !== ProductStatus.ARCHIVED) {
+          return "NOT_ARCHIVED";
+        }
+
+        const orderItem = await transaction.orderItem.findFirst({
+          where: {
+            OR: [
+              { productId },
+              {
+                variant: {
+                  productId,
+                },
+              },
+            ],
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (orderItem) {
+          return "HAS_ORDERS";
+        }
+
+        const deleted = await transaction.product.deleteMany({
+          where: {
+            id: productId,
+            status: ProductStatus.ARCHIVED,
+          },
+        });
+
+        return deleted.count === 1
+          ? "DELETED"
+          : "CONFLICT";
+      },
+      {
+        isolationLevel: "Serializable",
+      },
+    );
+
+    if (result === "NOT_FOUND") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "El producto no existe.",
+        },
+        { status: 404 },
+      );
+    }
+
+    if (result === "NOT_ARCHIVED") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "Debes archivar el producto antes de eliminarlo.",
+        },
+        { status: 409 },
+      );
+    }
+
+    if (result === "HAS_ORDERS") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Este producto tiene pedidos asociados. Debe permanecer archivado para conservar el historial.",
+        },
+        { status: 409 },
+      );
+    }
+
+    if (result !== "DELETED") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "El producto cambió de estado. Actualiza la página.",
+        },
+        { status: 409 },
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      message: "Producto eliminado correctamente.",
+    });
+  } catch (error) {
+    const code =
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error
+        ? error.code
+        : undefined;
+
+    if (code === "P2003") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "El producto tiene registros asociados que impiden su eliminación.",
+        },
+        { status: 409 },
+      );
+    }
+
+    if (code === "P2034") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Existe otra operación en curso. Actualiza la página e inténtalo nuevamente.",
+        },
+        { status: 409 },
+      );
+    }
+
+    console.error("Error eliminando producto:", error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "No fue posible eliminar el producto.",
+      },
+      { status: 500 },
+    );
+  }
+}
