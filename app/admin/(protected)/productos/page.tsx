@@ -21,7 +21,7 @@ export default async function AdminProductsPage() {
     <div>
       <PageHeader
         title="Productos"
-        description="Administra el catálogo completo de Incal."
+        description="Administra el catálogo completo de The Black Store."
         actions={
           <Link
             href="/admin/productos/nuevo"

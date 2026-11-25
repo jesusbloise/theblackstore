@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { getSiteUrl } from "@/lib/site";
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -6,6 +8,12 @@ import { CatalogGrid } from "@/components/products/CatalogGrid";
 import { Container } from "@/components/ui/Container";
 import type { CatalogParams } from "@/lib/catalog";
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const category = await prisma.category.findUnique({ where: { slug }, select: { name: true, description: true, isActive: true, parent: { select: { isActive: true } } } });
+  if (!category?.isActive || (category.parent && !category.parent.isActive)) return { title: "Categoría no encontrada", robots: { index: false, follow: false } };
+  return { title: category.name, description: (category.description || `Explora ${category.name} en The Black Store.`).slice(0,160), ...(getSiteUrl() ? { alternates: { canonical: `/categoria/${encodeURIComponent(slug)}` } } : {}) };
+}
 export default async function CategoryPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<CatalogParams> }) {
   const [{ slug }, filters] = await Promise.all([params, searchParams]);
   const category = await prisma.category.findUnique({ where: { slug }, select: {

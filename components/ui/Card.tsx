@@ -34,7 +34,7 @@ type CardFooterProps = HTMLAttributes<HTMLDivElement> & {
 
 const variantClasses: Record<CardVariant, string> = {
   default:
-    "border border-brand-100 bg-white shadow-[var(--incal-shadow-sm)]",
+    "border border-brand-100 bg-white shadow-[var(--tbs-legacy-shadow-sm)]",
 
   outlined:
     "border border-brand-100 bg-white",

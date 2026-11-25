@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { requireAdminApi } from '@/lib/auth/require-admin-api';
-const key = z.string().regex(/^products\/development\/[a-f0-9-]+\.(jpg|png|webp)$/i);
+const key = z.union([z.string().regex(/^products\/development\/[a-f0-9-]+\.(jpg|png|webp)$/i), z.string().regex(/^\/images\/demo\/banners\/(everything|essentials|living)\.webp$/)]);
 const schema = z.object({id:z.string().optional(),title:z.string().trim().min(1).max(120),subtitle:z.string().max(300),imageKey:key,mobileImageKey:key.nullable(),buttonText:z.string().max(60),href:z.string().max(500).regex(/^\/(?!\/)[^\\\s]*$/),alignment:z.enum(['left','center','right']),sortOrder:z.number().int().min(0).max(9999),isActive:z.boolean(),startsAt:z.iso.datetime().nullable(),endsAt:z.iso.datetime().nullable()}).refine(v=>!v.startsAt||!v.endsAt||v.startsAt<v.endsAt,'La fecha final debe ser posterior a la inicial');
 export async function POST(request:Request){
  const denied=await requireAdminApi(); if(denied)return denied;

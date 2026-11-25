@@ -1,7 +1,11 @@
+import type { Metadata } from "next";
+import { getSiteUrl } from "@/lib/site";
 import { Suspense } from "react";
 import { Container } from "@/components/ui/Container";
 import { CatalogGrid } from "@/components/products/CatalogGrid";
 import type { CatalogParams } from "@/lib/catalog";
+
+export const metadata: Metadata = { title: "Todos los productos", description: "Explora el catálogo de The Black Store.", ...(getSiteUrl() ? { alternates: { canonical: "/productos" } } : {}) };
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<CatalogParams> }) {
   const params = await searchParams;

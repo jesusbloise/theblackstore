@@ -1,0 +1,56 @@
+[
+  {
+    "slug": "demo-tbs-001",
+    "file": "demo-tbs-001.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:T-shirt-black.jpg",
+    "author": "Edited version created by <a href=\"//commons.wikimedia.org/wiki/User:Jacklee\" title=\"User:Jacklee\">Jacklee</a>.",
+    "license": "CC BY-SA 2.5",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5",
+    "title": "File:T-shirt-black.jpg"
+  },
+  {
+    "slug": "demo-tbs-002",
+    "file": "demo-tbs-002.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Indie_Kid_H%26M.jpg",
+    "author": "<a href=\"//commons.wikimedia.org/wiki/User:Kauey\" title=\"User:Kauey\">Kauey</a>",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "title": "File:Indie Kid H&M.jpg"
+  },
+  {
+    "slug": "demo-tbs-005",
+    "file": "demo-tbs-005.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Assalt43summer2006.JPG",
+    "author": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Northiber&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Northiber (page does not exist)\">Northiber</a>",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "title": "File:Assalt43summer2006.JPG"
+  },
+  {
+    "slug": "demo-tbs-007",
+    "file": "demo-tbs-007.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Italian_MVSN_Fachist_Fighting_knife.jpg",
+    "author": "<a href=\"//commons.wikimedia.org/wiki/User:MittlererWeg\" title=\"User:MittlererWeg\">MittlererWeg</a>",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "title": "File:Italian MVSN Fachist Fighting knife.jpg"
+  },
+  {
+    "slug": "demo-tbs-014",
+    "file": "demo-tbs-014.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:A_classic_Black_pair_of_Converse_All_Stars_resting_on_the_Black_%26_White_Ed._Shoebox_(1998-2002).JPG",
+    "author": "<a href=\"https://en.wikipedia.org/wiki/User:Hadley1978\" class=\"extiw\" title=\"wikipedia:User:Hadley1978\">Hadley1978</a> at <a href=\"https://en.wikipedia.org/wiki/\" class=\"extiw\" title=\"wikipedia:\">English Wikipedia</a>",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "title": "File:A classic Black pair of Converse All Stars resting on the Black & White Ed. Shoebox (1998-2002).JPG"
+  },
+  {
+    "slug": "demo-tbs-020",
+    "file": "demo-tbs-020.png",
+    "source": "https://commons.wikimedia.org/wiki/File:Baseball_cap.png",
+    "author": "<div class=\"plainlist\"><ul><li>Original photograph by <a href=\"//commons.wikimedia.org/w/index.php?title=User:TexasRebel&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:TexasRebel (page does not exist)\">TexasRebel</a></li><li>Derivative version by <a href=\"//commons.wikimedia.org/wiki/User:ReneeWrites\" title=\"User:ReneeWrites\">ReneeWrites</a></li></ul></div>",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "title": "File:Baseball cap.png"
+  }
+]

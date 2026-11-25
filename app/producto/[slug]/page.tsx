@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+import { cache } from "react";
+import { getSiteUrl } from "@/lib/site";
 import { ProductSection } from "@/components/home/CommercialHome";
 import { getStoreProducts } from "@/lib/storefront";
 import { getMediaUrl } from "@/lib/media-url";
@@ -40,13 +43,23 @@ function normalizeSlug(value: string) {
     .toLowerCase();
 }
 
+const loadProduct = cache(getPublishedProductBySlug);
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const product = await loadProduct(normalizeSlug((await params).slug));
+  if (!product || product.type === "CUSTOM_MATTRESS" || !product.variants.length) return { title: "Producto no encontrado", robots: { index: false, follow: false } };
+  const description = (product.shortDescription || product.description || `Descubre ${product.name} en The Black Store.`).slice(0, 160);
+  const site = getSiteUrl();
+  const path = `/producto/${encodeURIComponent(product.slug)}`;
+  return { title: product.name, description, ...(site ? { alternates: { canonical: path }, openGraph: { title: product.name, description, url: path, ...(product.images[0] ? { images: [getMediaUrl(product.images[0])!] } : {}) } } : {}) };
+}
+
 export default async function ProductPage({
   params,
 }: ProductPageProps) {
   const { slug } = await params;
 
   const product =
-    await getPublishedProductBySlug(
+    await loadProduct(
       normalizeSlug(slug),
     );
 

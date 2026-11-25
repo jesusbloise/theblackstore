@@ -5,6 +5,7 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { StoreChrome } from "@/components/layout/StoreChrome";
 import { getNavigationCategories } from "@/lib/storefront";
 
+import { getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -14,6 +15,9 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
+  metadataBase: getSiteUrl(),
+  robots: { index: Boolean(getSiteUrl()), follow: Boolean(getSiteUrl()) },
+  icons: { icon: "/brand-icon.svg" },
   title: {
     default: "The Black Store",
     template: "%s | The Black Store",
@@ -31,7 +35,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="es"
+      lang="es-CL"
       className={manrope.variable}
       data-scroll-behavior="smooth"
     >
