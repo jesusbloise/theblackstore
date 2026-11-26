@@ -1,13 +1,14 @@
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const unauthorized = await requireAdminApi();
+  const unauthorized = await requireAdminApi(request, ADMIN_PERMISSIONS.CATEGORIES_MANAGE);
   if (unauthorized) return unauthorized;
 
   const { id } = await context.params;
@@ -69,7 +70,7 @@ const categoryUpdateSchema = z.object({
 });
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const unauthorized = await requireAdminApi();
+  const unauthorized = await requireAdminApi(request, ADMIN_PERMISSIONS.CATEGORIES_MANAGE);
   if (unauthorized) return unauthorized;
   const { id } = await context.params;
   try {

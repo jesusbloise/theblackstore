@@ -20,12 +20,14 @@ type Props = {
     productId: string;
     productName: string;
     status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+    canDelete: boolean;
 };
 
 export default function ProductActions({
     productId,
     productName,
     status,
+    canDelete,
 }: Props) {
     const router = useRouter();
 
@@ -59,12 +61,13 @@ export default function ProductActions({
         },
     };
 
-    function openConfirmation(nextAction: Action) {
-        setError("");
-        setAction(nextAction);
-        dialogRef.current?.showModal();
-    }
+  function openConfirmation(nextAction: Action) {
+    if (nextAction === "delete" && !canDelete) return;
 
+    setError("");
+    setAction(nextAction);
+    dialogRef.current?.showModal();
+}
     function closeConfirmation() {
         if (requestLock.current) return;
 
@@ -73,10 +76,15 @@ export default function ProductActions({
         setError("");
     }
 
-    async function executeAction() {
-        if (!action || requestLock.current) return;
+async function executeAction() {
+    if (!action || requestLock.current) return;
 
-        requestLock.current = true;
+    if (action === "delete" && !canDelete) {
+        setError("No tienes permisos para eliminar productos.");
+        return;
+    }
+
+    requestLock.current = true;
         setLoading(true);
         setError("");
 
@@ -158,16 +166,18 @@ export default function ProductActions({
                     </button>
                 )}
 
-                <button
-                    type="button"
-                    title="Eliminar producto"
-                    aria-label="Eliminar producto"
-                    disabled={loading}
-                    onClick={() => openConfirmation("delete")}
-                    className={`${buttonClass} text-red-600 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed`}
-                >
-                    <Trash2 size={16} />
-                </button>
+               {canDelete && (
+    <button
+        type="button"
+        title="Eliminar producto"
+        aria-label="Eliminar producto"
+        disabled={loading}
+        onClick={() => openConfirmation("delete")}
+        className={`${buttonClass} text-red-600 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed`}
+    >
+        <Trash2 size={16} />
+    </button>
+)}
             </div>
 
             <dialog

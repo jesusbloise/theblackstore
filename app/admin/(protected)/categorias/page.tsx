@@ -1,3 +1,5 @@
+import { requireAdminPage } from "@/lib/auth/require-admin-page";
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import Link from "next/link";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { DeleteCategoryButton } from "@/components/admin/DeleteCategoryButton";
@@ -6,6 +8,8 @@ import { getCategories } from "@/services/admin/categories";
 export const dynamic = "force-dynamic";
 
 export default async function CategoriesPage() {
+  await requireAdminPage(ADMIN_PERMISSIONS.CATEGORIES_MANAGE);
+
   const categories = await getCategories();
   const roots = categories.filter((category) => !category.parentId);
   const childrenByParent = new Map<string, typeof categories>();

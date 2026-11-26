@@ -1,3 +1,4 @@
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -17,7 +18,7 @@ export async function POST(
   request: NextRequest,
 ) {
   // Verificar la sesión administrativa.
-  const unauthorized = await requireAdminApi();
+  const unauthorized = await requireAdminApi(request, ADMIN_PERMISSIONS.CATEGORIES_MANAGE);
 
   if (unauthorized) {
     return unauthorized;

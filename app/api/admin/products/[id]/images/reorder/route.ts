@@ -1,3 +1,4 @@
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import {
   NextRequest,
@@ -24,7 +25,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: RouteContext,
 ) {
-  const unauthorized = await requireAdminApi();
+  const unauthorized = await requireAdminApi(request, ADMIN_PERMISSIONS.PRODUCTS_MANAGE);
 
   if (unauthorized) {
     return unauthorized;

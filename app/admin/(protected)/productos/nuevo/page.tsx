@@ -1,3 +1,5 @@
+import { requireAdminPage } from "@/lib/auth/require-admin-page";
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { NewProductCompleteForm } from "@/components/admin/NewProductCompleteForm";
 import { getCategories } from "@/services/admin/categories";
@@ -5,6 +7,8 @@ import { getCategories } from "@/services/admin/categories";
 export const dynamic = "force-dynamic";
 
 export default async function NewProductPage() {
+  await requireAdminPage(ADMIN_PERMISSIONS.PRODUCTS_MANAGE);
+
   const categories =
     await getCategories();
 

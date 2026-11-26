@@ -1,3 +1,4 @@
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import {
   NextRequest,
@@ -49,7 +50,7 @@ function getExtension(
 export async function POST(
   request: NextRequest,
 ) {
-  const unauthorized = await requireAdminApi();
+  const unauthorized = await requireAdminApi(request, ADMIN_PERMISSIONS.MEDIA_MANAGE);
 
   if (unauthorized) {
     return unauthorized;

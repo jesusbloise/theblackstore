@@ -1,3 +1,5 @@
+import { requireAdminPage } from "@/lib/auth/require-admin-page";
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -24,6 +26,8 @@ type EditProductPageProps = {
 export default async function EditProductPage({
   params,
 }: EditProductPageProps) {
+  await requireAdminPage(ADMIN_PERMISSIONS.PRODUCTS_MANAGE);
+
   const { id } = await params;
 
   const [product, categories] =

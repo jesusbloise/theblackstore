@@ -1,3 +1,4 @@
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import {
   ProductStatus,
   ProductType,
@@ -48,7 +49,7 @@ const createProductSchema = z.object({
 export async function POST(
   request: NextRequest,
 ) {
-  const unauthorized = await requireAdminApi();
+  const unauthorized = await requireAdminApi(request, ADMIN_PERMISSIONS.PRODUCTS_MANAGE);
 
   if (unauthorized) {
     return unauthorized;

@@ -1,3 +1,5 @@
+import { requireAdminPage } from "@/lib/auth/require-admin-page";
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 
 import Link from "next/link";
 
@@ -5,6 +7,8 @@ import { ProductStatus } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminDashboardPage() {
+  await requireAdminPage(ADMIN_PERMISSIONS.DASHBOARD_VIEW);
+
   const [
     totalProducts,
     publishedProducts,

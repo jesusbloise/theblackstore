@@ -1,3 +1,8 @@
+import { requireAdminPage } from "@/lib/auth/require-admin-page";
+import {
+  ADMIN_PERMISSIONS,
+  hasAdminPermission,
+} from "@/lib/auth/admin-permissions";
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -51,7 +56,16 @@ export default async function AdminProductsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const params = await searchParams;
+  const admin = await requireAdminPage(
+  ADMIN_PERMISSIONS.PRODUCTS_VIEW,
+);
+
+const canDelete = hasAdminPermission(
+  admin.role,
+  ADMIN_PERMISSIONS.PRODUCTS_DELETE,
+);
+
+const params = await searchParams;
 
   const search =
     typeof params.search === "string"
@@ -589,11 +603,12 @@ export default async function AdminProductsPage({
                       {/* ACCIONES */}
 
 <td className="px-5 py-4">
-  <ProductActions
-    productId={product.id}
-    productName={product.name}
-    status={product.status}
-  />
+ <ProductActions
+  productId={product.id}
+  productName={product.name}
+  status={product.status}
+  canDelete={canDelete}
+/>
 </td>
                     </tr>
                   );

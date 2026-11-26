@@ -1,3 +1,5 @@
+import { requireAdminPage } from "@/lib/auth/require-admin-page";
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CategoryForm } from "@/components/admin/CategoryForm";
@@ -6,6 +8,8 @@ import { PageHeader } from "@/components/admin/PageHeader";
 export const dynamic = "force-dynamic";
 
 export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage(ADMIN_PERMISSIONS.CATEGORIES_MANAGE);
+
   const { id } = await params;
   const [category, categories] = await Promise.all([
     prisma.category.findUnique({ where: { id }, select: { id: true, name: true, slug: true, description: true, imageUrl: true, parentId: true, isActive: true } }),

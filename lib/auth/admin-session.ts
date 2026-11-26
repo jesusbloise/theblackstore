@@ -48,19 +48,28 @@ export async function getAdminSession() {
   const token =
     cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
 
-  if (!token) {
-    return null;
-  }
+ if (!token || !/^[a-f0-9]{64}$/.test(token)) {
+  return null;
+}
 
   const session =
-    await prisma.adminSession.findUnique({
-      where: {
-        tokenHash: hashToken(token),
+  await prisma.adminSession.findUnique({
+    where: {
+      tokenHash: hashToken(token),
+    },
+    select: {
+      expiresAt: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isActive: true,
+        },
       },
-      include: {
-        user: true,
-      },
-    });
+    },
+  });
 
   if (
     !session ||

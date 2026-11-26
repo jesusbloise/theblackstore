@@ -1,8 +1,15 @@
-
 import { NextResponse } from "next/server";
-import { deleteAdminSession } from "@/lib/auth/admin-session";
 
-export async function POST() {
+import { deleteAdminSession } from "@/lib/auth/admin-session";
+import { validateAdminCsrf } from "@/lib/auth/admin-csrf";
+
+export async function POST(request: Request) {
+  const csrfDenied = validateAdminCsrf(request);
+
+  if (csrfDenied) {
+    return csrfDenied;
+  }
+
   try {
     await deleteAdminSession();
 
@@ -18,7 +25,7 @@ export async function POST() {
         ok: false,
         message: "No se pudo cerrar la sesión.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -13,15 +13,54 @@ import {
 
 import LogoutButton from "./LogoutButton";
 import { getAdminSession } from "@/lib/auth/admin-session";
+import {
+  ADMIN_PERMISSIONS,
+  hasAdminPermission,
+} from "@/lib/auth/admin-permissions";
 
 const navigation = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Productos", href: "/admin/productos", icon: Package },
-  { label: "Categorías", href: "/admin/categorias", icon: Layers },
-  { label: "Banners y campañas", href: "/admin/banners", icon: ImageIcon },
-  { label: "Pedidos", href: "/admin/pedidos", icon: ShoppingBag },
-  { label: "Clientes", href: "/admin/clientes", icon: Users },
-  { label: "Configuración", href: "/admin/configuracion", icon: Settings },
+  {
+    label: "Dashboard",
+    href: "/admin",
+    icon: LayoutDashboard,
+    permission: ADMIN_PERMISSIONS.DASHBOARD_VIEW,
+  },
+  {
+    label: "Productos",
+    href: "/admin/productos",
+    icon: Package,
+    permission: ADMIN_PERMISSIONS.PRODUCTS_VIEW,
+  },
+  {
+    label: "Categorías",
+    href: "/admin/categorias",
+    icon: Layers,
+    permission: ADMIN_PERMISSIONS.CATEGORIES_MANAGE,
+  },
+  {
+    label: "Banners y campañas",
+    href: "/admin/banners",
+    icon: ImageIcon,
+    permission: ADMIN_PERMISSIONS.BANNERS_MANAGE,
+  },
+  {
+    label: "Pedidos",
+    href: "/admin/pedidos",
+    icon: ShoppingBag,
+    permission: ADMIN_PERMISSIONS.ORDERS_VIEW,
+  },
+  {
+    label: "Clientes",
+    href: "/admin/clientes",
+    icon: Users,
+    permission: ADMIN_PERMISSIONS.CUSTOMERS_VIEW,
+  },
+  {
+    label: "Configuración",
+    href: "/admin/configuracion",
+    icon: Settings,
+    permission: ADMIN_PERMISSIONS.SETTINGS_MANAGE,
+  },
 ];
 
 export default async function ProtectedAdminLayout({
@@ -34,6 +73,12 @@ export default async function ProtectedAdminLayout({
   if (!admin) {
     redirect("/admin/login");
   }
+const allowedNavigation = navigation.filter(
+  (item) => hasAdminPermission(
+    admin.role,
+    item.permission,
+  ),
+);
 
   return (
     <div className="min-h-screen bg-[#F7F6F3] text-[#101010]">
@@ -58,7 +103,7 @@ export default async function ProtectedAdminLayout({
           </p>
 
           <nav className="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-1">
-            {navigation.map(({ label, href, icon: Icon }) => (
+           {allowedNavigation.map(({ label, href, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}

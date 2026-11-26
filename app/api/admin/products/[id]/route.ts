@@ -1,3 +1,4 @@
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import {
   NextRequest,
   NextResponse,
@@ -63,7 +64,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: RouteContext,
 ) {
-  const unauthorized = await requireAdminApi();
+  const unauthorized = await requireAdminApi(request, ADMIN_PERMISSIONS.PRODUCTS_MANAGE);
 
   if (unauthorized) {
     return unauthorized;
@@ -308,7 +309,7 @@ export async function POST(
   request: NextRequest,
   { params }: RouteContext,
 ) {
-  const unauthorized = await requireAdminApi();
+  const unauthorized = await requireAdminApi(request, ADMIN_PERMISSIONS.PRODUCTS_MANAGE);
 
   if (unauthorized) {
     return unauthorized;
@@ -479,7 +480,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: RouteContext,
 ) {
-  const unauthorized = await requireAdminApi();
+  const unauthorized = await requireAdminApi(request, ADMIN_PERMISSIONS.PRODUCTS_DELETE);
 
   if (unauthorized) {
     return unauthorized;

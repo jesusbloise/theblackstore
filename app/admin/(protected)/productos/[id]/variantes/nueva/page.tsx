@@ -1,3 +1,5 @@
+import { requireAdminPage } from "@/lib/auth/require-admin-page";
+import { ADMIN_PERMISSIONS } from "@/lib/auth/admin-permissions";
 import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -15,6 +17,8 @@ type NewVariantPageProps = {
 export default async function NewVariantPage({
   params,
 }: NewVariantPageProps) {
+  await requireAdminPage(ADMIN_PERMISSIONS.INVENTORY_MANAGE);
+
   const { id } = await params;
 
   const product =
