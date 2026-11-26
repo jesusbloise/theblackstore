@@ -206,10 +206,59 @@ export async function PATCH(
       );
     }
 
-    const updatedVariant =
-      await prisma.$transaction(
-        async (transaction) => {
-          const updated =
+  const updatedVariant =
+  await prisma.$transaction(
+    async (transaction) => {
+      const currentVariant =
+        await transaction.productVariant.findFirst({
+          where: {
+            id: variantId,
+            productId,
+          },
+          select: {
+            isActive: true,
+            product: {
+              select: {
+                status: true,
+              },
+            },
+          },
+        });
+
+      if (!currentVariant) {
+        throw new Error("VARIANT_NOT_FOUND");
+      }
+
+      const nextIsActive =
+        data.isActive ?? currentVariant.isActive;
+
+      const willBeValid =
+        nextIsActive && data.price > 0;
+
+      if (
+        currentVariant.product.status === "PUBLISHED" &&
+        !willBeValid
+      ) {
+        const remainingValidVariants =
+          await transaction.productVariant.count({
+            where: {
+              productId,
+              id: {
+                not: variantId,
+              },
+              isActive: true,
+              price: {
+                gt: 0,
+              },
+            },
+          });
+
+        if (remainingValidVariants === 0) {
+          throw new Error("LAST_VALID_VARIANT");
+        }
+      }
+
+      const updated =
             await transaction.productVariant.update({
               where: {
                 id: variantId,
@@ -316,7 +365,10 @@ export async function PATCH(
             });
           }
 
-          return updated;
+         return updated;
+        },
+        {
+          isolationLevel: "Serializable",
         },
       );
 
@@ -326,10 +378,65 @@ export async function PATCH(
         updatedVariant,
     });
   } catch (error) {
-    console.error(
-      "Error actualizando variante:",
-      error,
+  if (
+    error instanceof Error &&
+    error.message === "LAST_VALID_VARIANT"
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "El producto está publicado y debe conservar al menos una variante activa con precio mayor a $0. Archiva el producto o activa otra variante válida.",
+      },
+      { status: 409 },
     );
+  }
+
+  if (
+    error instanceof Error &&
+    error.message === "VARIANT_NOT_FOUND"
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "La variante no existe.",
+      },
+      { status: 404 },
+    );
+  }
+
+  const code =
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error
+      ? error.code
+      : undefined;
+
+  if (code === "P2034") {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "Existe otra operación en curso. Actualiza la página e inténtalo nuevamente.",
+      },
+      { status: 409 },
+    );
+  }
+
+  if (code === "P2002") {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "El SKU o algún atributo está duplicado.",
+      },
+      { status: 409 },
+    );
+  }
+
+  console.error(
+    "Error actualizando variante:",
+    error,
+  );
 
     return NextResponse.json(
       {
@@ -359,40 +466,161 @@ export async function DELETE(
       variantId,
     } = await params;
 
-    const variant =
-      await prisma.productVariant.findFirst({
-        where: {
-          id: variantId,
-          productId,
-        },
-        select: {
-          id: true,
-        },
-      });
+    const result = await prisma.$transaction(
+      async (transaction) => {
+        const variant =
+          await transaction.productVariant.findFirst({
+            where: {
+              id: variantId,
+              productId,
+            },
+            select: {
+              id: true,
+            },
+          });
 
-    if (!variant) {
+        if (!variant) {
+          return "NOT_FOUND";
+        }
+
+        const orderItem =
+          await transaction.orderItem.findFirst({
+            where: {
+              variantId,
+            },
+            select: {
+              id: true,
+            },
+          });
+
+        if (orderItem) {
+  return "HAS_ORDERS";
+}
+
+const product = await transaction.product.findUnique({
+  where: {
+    id: productId,
+  },
+  select: {
+    status: true,
+  },
+});
+
+if (product?.status === "PUBLISHED") {
+  const remainingValidVariants =
+    await transaction.productVariant.count({
+      where: {
+        productId,
+        id: {
+          not: variantId,
+        },
+        isActive: true,
+        price: {
+          gt: 0,
+        },
+      },
+    });
+
+  if (remainingValidVariants === 0) {
+    return "LAST_VALID_VARIANT";
+  }
+}
+
+        const deleted =
+          await transaction.productVariant.deleteMany({
+            where: {
+              id: variantId,
+              productId,
+            },
+          });
+
+        return deleted.count === 1
+          ? "DELETED"
+          : "CONFLICT";
+      },
+      {
+        isolationLevel: "Serializable",
+      },
+    );
+
+    if (result === "NOT_FOUND") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "La variante no existe.",
+        },
+        { status: 404 },
+      );
+    }
+
+    if (result === "HAS_ORDERS") {
       return NextResponse.json(
         {
           ok: false,
           message:
-            "La variante no existe.",
+            "Esta variante tiene pedidos asociados y no puede eliminarse. Puedes desactivarla para retirarla de la tienda sin perder el historial de compras.",
         },
-        {
-          status: 404,
-        },
+        { status: 409 },
       );
     }
 
-    await prisma.productVariant.delete({
-      where: {
-        id: variantId,
-      },
-    });
+    if (result === "LAST_VALID_VARIANT") {
+  return NextResponse.json(
+    {
+      ok: false,
+      message:
+        "No puedes eliminar esta variante porque el producto está publicado y debe conservar al menos una variante activa con precio mayor a $0. Archiva el producto o agrega otra variante válida.",
+    },
+    { status: 409 },
+  );
+}
+
+if (result !== "DELETED") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "La variante fue modificada por otra operación. Actualiza la página.",
+        },
+        { status: 409 },
+      );
+    }
 
     return NextResponse.json({
       ok: true,
+      message: "Variante eliminada correctamente.",
     });
+
   } catch (error) {
+    const code =
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error
+        ? error.code
+        : undefined;
+
+    if (code === "P2003") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Esta variante tiene registros asociados que impiden su eliminación. Puedes desactivarla.",
+        },
+        { status: 409 },
+      );
+    }
+
+    if (code === "P2034") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Existe otra operación en curso. Actualiza la página e inténtalo nuevamente.",
+        },
+        { status: 409 },
+      );
+    }
+
     console.error(
       "Error eliminando variante:",
       error,
@@ -404,9 +632,7 @@ export async function DELETE(
         message:
           "No fue posible eliminar la variante.",
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 }

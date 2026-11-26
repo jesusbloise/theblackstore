@@ -170,23 +170,30 @@ export async function PATCH(
       );
     }
 
-    if (data.status === ProductStatus.PUBLISHED) {
-      const sellableVariant = await prisma.productVariant.findFirst({
-        where: { productId, isActive: true, price: { gt: 0 } },
-        select: { id: true },
-      });
-      if (!sellableVariant) {
-        return NextResponse.json({
-          ok: false,
-          message: "No se puede publicar: crea al menos una variante activa con precio mayor que $0.",
-        }, { status: 400 });
-      }
-    }
+   const updatedProduct =
+  await prisma.$transaction(
+    async (transaction) => {
+      if (data.status === ProductStatus.PUBLISHED) {
+        const sellableVariant =
+          await transaction.productVariant.findFirst({
+            where: {
+              productId,
+              isActive: true,
+              price: {
+                gt: 0,
+              },
+            },
+            select: {
+              id: true,
+            },
+          });
 
-    const updatedProduct =
-      await prisma.$transaction(
-        async (transaction) => {
-          const updated =
+        if (!sellableVariant) {
+          throw new Error("NO_VALID_VARIANTS");
+        }
+      }
+
+      const updated =
             await transaction.product.update({
               where: {
                 id: productId,
@@ -218,17 +225,72 @@ export async function PATCH(
 
           return updated;
         },
+        {
+          isolationLevel: "Serializable",
+        },
       );
 
     return NextResponse.json({
       ok: true,
       product: updatedProduct,
     });
-  } catch (error) {
-    console.error(
-      "Error actualizando producto:",
-      error,
+ } catch (error) {
+  if (
+    error instanceof Error &&
+    error.message === "NO_VALID_VARIANTS"
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "No se puede publicar: crea al menos una variante activa con precio mayor a $0.",
+      },
+      { status: 400 },
     );
+  }
+
+  const code =
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error
+      ? error.code
+      : undefined;
+
+  if (code === "P2034") {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "Existe otra operación en curso. Actualiza la página e inténtalo nuevamente.",
+      },
+      { status: 409 },
+    );
+  }
+
+  if (code === "P2002") {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Ya existe otro producto con ese slug.",
+      },
+      { status: 409 },
+    );
+  }
+
+  if (code === "P2025") {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "El producto ya no existe.",
+      },
+      { status: 404 },
+    );
+  }
+
+  console.error(
+    "Error actualizando producto:",
+    error,
+  );
 
     return NextResponse.json(
       {
@@ -272,54 +334,101 @@ export async function POST(
     }
 
     const isArchive =
-  validation.data.action === "archive";
+      validation.data.action === "archive";
 
-if (!isArchive) {
-  const sellableVariant = await prisma.productVariant.findFirst({
-    where: {
-      productId,
-      isActive: true,
-      price: {
-        gt: 0,
+    const result = await prisma.$transaction(
+      async (transaction) => {
+        const product =
+          await transaction.product.findUnique({
+            where: {
+              id: productId,
+            },
+            select: {
+              status: true,
+            },
+          });
+
+        if (!product) {
+          return "NOT_FOUND";
+        }
+
+        if (
+          isArchive
+            ? product.status === ProductStatus.ARCHIVED
+            : product.status !== ProductStatus.ARCHIVED
+        ) {
+          return "INVALID_STATUS";
+        }
+
+        if (!isArchive) {
+          const sellableVariant =
+            await transaction.productVariant.findFirst({
+              where: {
+                productId,
+                isActive: true,
+                price: {
+                  gt: 0,
+                },
+              },
+              select: {
+                id: true,
+              },
+            });
+
+          if (!sellableVariant) {
+            return "NO_VALID_VARIANTS";
+          }
+        }
+
+        const updated =
+          await transaction.product.updateMany({
+            where: {
+              id: productId,
+              status: product.status,
+            },
+            data: {
+              status: isArchive
+                ? ProductStatus.ARCHIVED
+                : ProductStatus.PUBLISHED,
+            },
+          });
+
+        return updated.count === 1
+          ? "UPDATED"
+          : "CONFLICT";
       },
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (!sellableVariant) {
-    return NextResponse.json(
       {
-        ok: false,
-        message:
-          "No se puede publicar el producto sin una variante activa con precio válido.",
+        isolationLevel: "Serializable",
       },
-      { status: 400 },
     );
-  }
-}
 
-    const result = await prisma.product.updateMany({
-      where: {
-        id: productId,
-        status: isArchive
-          ? { not: ProductStatus.ARCHIVED }
-          : ProductStatus.ARCHIVED,
-      },
-      data: {
-  status: isArchive
-    ? ProductStatus.ARCHIVED
-    : ProductStatus.PUBLISHED,
-},
-    });
+    if (result === "NOT_FOUND") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "El producto no existe.",
+        },
+        { status: 404 },
+      );
+    }
 
-    if (result.count === 0) {
+    if (result === "NO_VALID_VARIANTS") {
       return NextResponse.json(
         {
           ok: false,
           message:
-            "El producto no existe o su estado no permite esta acción.",
+            "No se puede recuperar y publicar el producto sin una variante activa con precio mayor a $0.",
+        },
+        { status: 409 },
+      );
+    }
+
+    if (result !== "UPDATED") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "El estado del producto no permite esta acción. Actualiza la página.",
         },
         { status: 409 },
       );
@@ -327,17 +436,40 @@ if (!isArchive) {
 
     return NextResponse.json({
       ok: true,
-     message: isArchive
-  ? "Producto archivado correctamente."
-  : "Producto recuperado y publicado correctamente.",
+      message: isArchive
+        ? "Producto archivado correctamente."
+        : "Producto recuperado y publicado correctamente.",
     });
+
   } catch (error) {
-    console.error("Error cambiando estado del producto:", error);
+    const code =
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error
+        ? error.code
+        : undefined;
+
+    if (code === "P2034") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Existe otra operación en curso. Actualiza la página e inténtalo nuevamente.",
+        },
+        { status: 409 },
+      );
+    }
+
+    console.error(
+      "Error cambiando estado del producto:",
+      error,
+    );
 
     return NextResponse.json(
       {
         ok: false,
-        message: "No fue posible cambiar el estado del producto.",
+        message:
+          "No fue posible cambiar el estado del producto.",
       },
       { status: 500 },
     );

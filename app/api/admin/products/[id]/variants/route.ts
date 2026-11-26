@@ -154,15 +154,17 @@ export async function POST(
       );
     }
 
-    const existingSku =
-      await prisma.productVariant.findUnique({
-        where: {
-          sku: data.sku,
-        },
-        select: {
-          id: true,
-        },
-      });
+    const normalizedSku = data.sku.trim().toUpperCase();
+
+const existingSku =
+  await prisma.productVariant.findUnique({
+    where: {
+      sku: normalizedSku,
+    },
+    select: {
+      id: true,
+    },
+  });
 
     if (existingSku) {
       return NextResponse.json(
@@ -198,9 +200,7 @@ export async function POST(
               data: {
                 productId,
                 name: data.name,
-                sku: data.sku
-                  .trim()
-                  .toUpperCase(),
+                sku: normalizedSku,
 
                 price: data.price,
 
@@ -301,11 +301,27 @@ export async function POST(
       },
     );
   } catch (error) {
-    console.error(
-      "Error creando variante:",
-      error,
-    );
+  const code =
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error
+      ? error.code
+      : undefined;
 
+  if (code === "P2002") {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Ya existe una variante con ese SKU o un atributo duplicado.",
+      },
+      { status: 409 },
+    );
+  }
+
+  console.error(
+    "Error creando variante:",
+    error,
+  );
     return NextResponse.json(
       {
         ok: false,

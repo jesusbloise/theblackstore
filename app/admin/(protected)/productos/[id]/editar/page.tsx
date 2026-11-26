@@ -112,11 +112,19 @@ export default async function EditProductPage({
             <InventoryVariantsEditor
               productId={product.id}
               prefix={product.slug.slice(0, 12)}
-              initialVariants={product.variants.map(v => ({
-                id: v.id, name: v.name, sku: v.sku, price: v.price,
-                stock: v.stock, isActive: v.isActive,
-                attributes: v.attributes.map(a => ({name:a.name,value:a.value})),
-              }))}
+             initialVariants={product.variants.map((v) => ({
+  id: v.id,
+  name: v.name,
+  sku: v.sku,
+  price: v.price,
+  stock: v.stock,
+  isActive: v.isActive,
+  updatedAt: v.updatedAt.toISOString(),
+  attributes: v.attributes.map((a) => ({
+    name: a.name,
+    value: a.value,
+  })),
+}))}
             />
           </section>
 
